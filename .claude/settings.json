@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Move-Item \"C:\\\\workspace\\\\ai-assistant\\\\docs\\\\reviews\\\\spec-sonnet-2026-06-22.md\" \"C:\\\\workspace\\\\ai-assistant\\\\docs\\\\reviews\\\\spec\\\\spec-sonnet-2026-06-22.md\")",
+      "PowerShell(Move-Item \"C:\\\\workspace\\\\ai-assistant\\\\docs\\\\reviews\\\\spec-opus-2026-06-22.md\" \"C:\\\\workspace\\\\ai-assistant\\\\docs\\\\reviews\\\\spec\\\\spec-opus-2026-06-22.md\")",
+      "PowerShell(Move-Item \"C:\\\\workspace\\\\ai-assistant\\\\docs\\\\reviews\\\\spec-fixes-2026-06-22.md\" \"C:\\\\workspace\\\\ai-assistant\\\\docs\\\\reviews\\\\spec\\\\spec-fixes-2026-06-22.md\")",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\workspace\\\\ai-assistant\" -Recurse -Force | Where-Object { !$_.PSIsContainer } | Select-Object FullName)"
+    ]
+  }
+}
