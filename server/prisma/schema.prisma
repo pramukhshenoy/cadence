@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  priority    Priority
+  dueDate     DateTime?
+  status      TaskStatus @default(TODO)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Habit {
+  id               String            @id @default(cuid())
+  name             String
+  description      String?
+  frequency        Frequency
+  weeklyTargetDays String? // JSON array of day ints (0=Sun) for WEEKLY habits
+  completions      HabitCompletion[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model HabitCompletion {
+  id        String @id @default(cuid())
+  habitId   String
+  habit     Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  localDate String // "YYYY-MM-DD" in device local time — timezone-stable for streak logic
+
+  @@unique([habitId, localDate])
+}
+
+model FocusBlock {
+  id                    String           @id @default(cuid())
+  deviceCalendarEventId String           @unique
+  calendarMarker        String           @unique
+  startTime             DateTime
+  endTime               DateTime
+  taskId                String?
+  status                FocusBlockStatus @default(ACTIVE)
+  rescheduled           Boolean          @default(false)
+  rescheduleReason      String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+}
+
+model SleepRecord {
+  id            String       @id @default(cuid())
+  localDate     String       @unique // "YYYY-MM-DD" of the night — unique per night
+  durationHours Float
+  quality       SleepQuality
+  deepSleepHours Float?
+  remSleepHours  Float?
+  sessionCount  Int          @default(1)
+  fetchedAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           Role
+  content        String
+  createdAt      DateTime @default(now())
+}
+
+model Settings {
+  id                  String   @id @default("singleton")
+  focusHoursPerWeek   Int      @default(10)
+  workdayStartHour    Int      @default(9)
+  workdayEndHour      Int      @default(18)
+  includeWeekends     Boolean  @default(false)
+  preferredModel      String   @default("claude-sonnet-4-6")
+  sleepThresholdHours Float    @default(6.5)
+  goodThresholdHours  Float    @default(7.0)
+  morningCutoffHour   Int      @default(10)
+  targetCalendarId    String?
+  timezone            String   @default("UTC") // stored user preference — always use X-Timezone request header for live local-time math
+  updatedAt           DateTime @updatedAt
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+}
+
+enum FocusBlockStatus {
+  ACTIVE
+  DELETED
+}
+
+enum SleepQuality {
+  POOR
+  FAIR
+  GOOD
+}
+
+enum Role {
+  USER
+  ASSISTANT
+}
