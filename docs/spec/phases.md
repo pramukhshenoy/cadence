@@ -7,14 +7,14 @@ Git push follows each commit if a remote is configured.
 
 ## Phase 1 — Foundation
 
-### 1a — Monorepo & Tooling
-- [ ] `git init` in project root; create `.gitignore` (node_modules, .env, *.db, dist/)
-- [ ] Root `package.json` with shared scripts (`lint:all`, `typecheck:all`)
-- [ ] `/app` — Expo project scaffold (TypeScript template)
-- [ ] `/server` — Express project scaffold (TypeScript)
-- [ ] Per-package `tsconfig.json` (RN target for app, Node/CommonJS for server)
-- [ ] Per-package `.eslintrc.js` (react-native community rules for app, Node rules for server)
-- [ ] `git commit`: `phase-1a: monorepo structure and tooling`
+### 1a — Monorepo & Tooling ✅
+- [x] `git init` in project root; create `.gitignore` (node_modules, .env, *.db, dist/)
+- [x] Root `package.json` with shared scripts (`lint:all`, `typecheck:all`)
+- [x] `/app` — Expo project scaffold (TypeScript template)
+- [x] `/server` — Express project scaffold (TypeScript)
+- [x] Per-package `tsconfig.json` (RN target for app, Node/CommonJS for server)
+- [x] Per-package `eslint.config.js` (expo flat config for app, @typescript-eslint flat config for server)
+- [x] `git commit`: `phase-1a: monorepo structure and tooling`
 
 ### 1b — Backend Server
 - [ ] Express app with base routes (`GET /health`)
