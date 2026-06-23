@@ -5,12 +5,12 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 
-export default function DashboardScreen() {
+export default function HabitsScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.content}>
-        <ThemedText type="title">Dashboard</ThemedText>
-        <ThemedText themeColor="textSecondary">Your daily overview will appear here.</ThemedText>
+        <ThemedText type="title">Habits</ThemedText>
+        <ThemedText themeColor="textSecondary">Your habits will appear here.</ThemedText>
       </SafeAreaView>
     </ThemedView>
   );
