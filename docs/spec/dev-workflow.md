@@ -68,7 +68,11 @@ Sub-phase Na complete
     │
     ├── 7. git commit: `phase-Na: description`
     │
-    └── 8. git push (if remote configured)
+    ├── 8. git push (if remote configured)
+    │
+    └── 9. Update progress docs
+             ├── PLAN.md — tick the sub-phase inline (e.g. `[x] 1a monorepo`)
+             └── docs/spec/phases.md — check off every completed checklist item
 ```
 
 You review the fixes summary and confirm before the next sub-phase begins.
@@ -158,6 +162,8 @@ No Play Store needed — personal use.
 - [ ] Fixes summary saved
 - [ ] `git commit` with message `phase-Na: description`
 - [ ] `git push` (if remote configured)
+- [ ] `PLAN.md` updated — sub-phase ticked inline
+- [ ] `docs/spec/phases.md` updated — checklist items checked off
 - [ ] You approved → next sub-phase begins
 
 ## Git Remote Setup (one-time, your step)

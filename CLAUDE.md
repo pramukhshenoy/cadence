@@ -87,6 +87,7 @@ npm run typecheck:all      # tsc --noEmit on app/ and server/
 3. Opus review on fixed code → save → **apply all Opus fixes**
 4. Save fixes summary to `docs/reviews/phase-N/Na-fixes-DATE.md`
 5. `git commit -m "phase-Na: description"` then `git push` (if remote set)
+6. Update progress docs: tick sub-phase in `PLAN.md` and check off items in `docs/spec/phases.md`
 
 Sonnet runs first so Opus reviews already-improved code and catches deeper issues only.
 
