@@ -51,15 +51,15 @@ Git push follows each commit if a remote is configured.
 - [x] Jest tests for all endpoints
 - [x] `git commit`: `phase-2a: tasks REST API`
 
-### 2b — Habits Backend
-- [ ] `GET /api/habits` — list with today's completion status
-- [ ] `POST /api/habits` — create
-- [ ] `PATCH /api/habits/:id` — update
-- [ ] `DELETE /api/habits/:id` — delete (cascades completions)
-- [ ] `POST /api/habits/:id/complete` — log completion for local date
-- [ ] Streak calculation logic (daily = consecutive local dates; weekly = consecutive weeks meeting target)
-- [ ] Jest tests including streak edge cases
-- [ ] `git commit`: `phase-2b: habits REST API with streak logic`
+### 2b — Habits Backend ✅
+- [x] `GET /api/habits` — list with today's completion status
+- [x] `POST /api/habits` — create
+- [x] `PATCH /api/habits/:id` — update
+- [x] `DELETE /api/habits/:id` — delete (cascades completions)
+- [x] `POST /api/habits/:id/complete` — log completion for local date
+- [x] Streak calculation logic (daily = consecutive local dates; weekly = consecutive weeks meeting target)
+- [x] Jest tests including streak edge cases
+- [x] `git commit`: `phase-2b: habits REST API with streak logic`
 
 ### 2c — Tasks Screen (Mobile)
 - [ ] Task list screen grouped by priority or due date
