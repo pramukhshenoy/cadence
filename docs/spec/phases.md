@@ -24,11 +24,11 @@ Git push follows each commit if a remote is configured.
 - [x] `server/.env.example` with all required env vars
 - [x] `git commit`: `phase-1b: express server with auth and timezone middleware`
 
-### 1c — Database
-- [ ] Prisma schema (all models from `data-model.md`)
-- [ ] Initial migration + Settings singleton seed
-- [ ] Verify schema compiles and migration runs cleanly
-- [ ] `git commit`: `phase-1c: prisma schema and initial migration`
+### 1c — Database ✅
+- [x] Prisma schema (all models from `data-model.md`)
+- [x] Initial migration + Settings singleton seed
+- [x] Verify schema compiles and migration runs cleanly
+- [x] `git commit`: `phase-1c: prisma schema and initial migration`
 
 ### 1d — Mobile Shell
 - [ ] Expo app with bottom tab navigation (Dashboard, Tasks, Habits, Chat, Settings)
