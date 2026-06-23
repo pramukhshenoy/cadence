@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 5. I'm always open to ideas on better ways to do things. Please don't hesitate to suggest a better way, or one that has long lasting impact over a tactical change. (as a few examples)
 
-# AI Assistant — Project Context
+# Cadence — Project Context
 
 Personal Android app (single user). Primary interaction is through an AI chat interface. Manages tasks, habits, calendar focus blocking, and sleep-aware rescheduling.
 

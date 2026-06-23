@@ -1,4 +1,4 @@
-# Personal AI Assistant — Project Plan
+# Cadence — Project Plan
 
 Single-user Android app. Primary interaction is through an AI chat interface that is aware of your tasks, habits, calendar, and sleep.
 

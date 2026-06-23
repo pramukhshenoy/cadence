@@ -99,6 +99,6 @@ npm run dev              # hot reload with ts-node-dev
 ```bash
 npm install -g pm2
 npm run build            # compile TypeScript
-pm2 start dist/index.js --name ai-assistant-server
+pm2 start dist/index.js --name cadence-server
 pm2 startup              # auto-start on PC reboot
 ```

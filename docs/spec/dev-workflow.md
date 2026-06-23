@@ -120,7 +120,7 @@ npm run dev                # hot reload
 **Always-on (no terminal):**
 ```bash
 npm run build
-pm2 start dist/index.js --name ai-assistant-server
+pm2 start dist/index.js --name cadence-server
 pm2 startup
 ```
 
