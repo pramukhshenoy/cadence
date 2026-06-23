@@ -30,14 +30,14 @@ Git push follows each commit if a remote is configured.
 - [x] Verify schema compiles and migration runs cleanly
 - [x] `git commit`: `phase-1c: prisma schema and initial migration`
 
-### 1d — Mobile Shell
-- [ ] Expo app with bottom tab navigation (Dashboard, Tasks, Habits, Chat, Settings)
-- [ ] Placeholder screens for each tab
-- [ ] TanStack Query provider wired up
-- [ ] Backend URL config: default `http://10.0.2.2:3000`, overridable via Settings stub
-- [ ] Bearer token stored in Expo SecureStore, sent with every request
-- [ ] `X-Timezone` header automatically appended to every API call
-- [ ] `git commit`: `phase-1d: mobile shell with navigation and API client`
+### 1d — Mobile Shell ✅
+- [x] Expo app with bottom tab navigation (Dashboard, Tasks, Habits, Chat, Settings)
+- [x] Placeholder screens for each tab
+- [x] TanStack Query provider wired up
+- [x] Backend URL config: default `http://10.0.2.2:3000`, overridable via Settings stub
+- [x] Bearer token stored in Expo SecureStore, sent with every request
+- [x] `X-Timezone` header automatically appended to every API call
+- [x] `git commit`: `phase-1d: mobile shell with navigation and API client`
 
 ---
 

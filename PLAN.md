@@ -31,7 +31,7 @@ Single-user Android app. Primary interaction is through an AI chat interface tha
 - [x] Node.js installed
 - [x] Android Studio installed
 - [ ] Android Virtual Device created (Pixel 8, API 35, Google Play) — in progress
-- [ ] Phase 1 — Foundation ([x] 1a monorepo · [x] 1b server · [x] 1c database · 1d mobile shell)
+- [x] Phase 1 — Foundation ([x] 1a monorepo · [x] 1b server · [x] 1c database · [x] 1d mobile shell)
 - [ ] Phase 2 — Tasks & Habits (2a tasks API · 2b habits API · 2c tasks screen · 2d habits + dashboard)
 - [ ] Phase 3 — AI Chat (3a chat SSE · 3b models · 3c chat UI · 3d settings)
 - [ ] Phase 4 — Calendar (4a permissions · 4b algorithm · 4c sync flow · 4d widget)
