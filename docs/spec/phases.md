@@ -16,13 +16,13 @@ Git push follows each commit if a remote is configured.
 - [x] Per-package `eslint.config.js` (expo flat config for app, @typescript-eslint flat config for server)
 - [x] `git commit`: `phase-1a: monorepo structure and tooling`
 
-### 1b — Backend Server
-- [ ] Express app with base routes (`GET /health`)
-- [ ] Bearer token auth middleware (reads `API_BEARER_TOKEN` from env, validates `Authorization` header)
-- [ ] `X-Timezone` header parsing middleware
-- [ ] Error handling middleware
-- [ ] `server/.env.example` with all required env vars
-- [ ] `git commit`: `phase-1b: express server with auth and timezone middleware`
+### 1b — Backend Server ✅
+- [x] Express app with base routes (`GET /health`)
+- [x] Bearer token auth middleware (reads `API_BEARER_TOKEN` from env, validates `Authorization` header)
+- [x] `X-Timezone` header parsing middleware
+- [x] Error handling middleware
+- [x] `server/.env.example` with all required env vars
+- [x] `git commit`: `phase-1b: express server with auth and timezone middleware`
 
 ### 1c — Database
 - [ ] Prisma schema (all models from `data-model.md`)
