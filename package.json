@@ -1,0 +1,8 @@
+{
+  "name": "cadence",
+  "private": true,
+  "scripts": {
+    "lint:all": "npm run lint --prefix app && npm run lint --prefix server",
+    "typecheck:all": "npm run typecheck --prefix app && npm run typecheck --prefix server"
+  }
+}
