@@ -43,13 +43,13 @@ Git push follows each commit if a remote is configured.
 
 ## Phase 2 — Tasks & Habits
 
-### 2a — Tasks Backend
-- [ ] `GET /api/tasks` — list, with filter by status/priority
-- [ ] `POST /api/tasks` — create
-- [ ] `PATCH /api/tasks/:id` — update
-- [ ] `DELETE /api/tasks/:id` — delete
-- [ ] Jest tests for all endpoints
-- [ ] `git commit`: `phase-2a: tasks REST API`
+### 2a — Tasks Backend ✅
+- [x] `GET /api/tasks` — list, with filter by status/priority
+- [x] `POST /api/tasks` — create
+- [x] `PATCH /api/tasks/:id` — update
+- [x] `DELETE /api/tasks/:id` — delete
+- [x] Jest tests for all endpoints
+- [x] `git commit`: `phase-2a: tasks REST API`
 
 ### 2b — Habits Backend
 - [ ] `GET /api/habits` — list with today's completion status
