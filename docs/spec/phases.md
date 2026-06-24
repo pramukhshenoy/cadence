@@ -79,13 +79,13 @@ Git push follows each commit if a remote is configured.
 
 ## Phase 3 — AI Chat
 
-### 3a — Chat Backend (Streaming)
-- [ ] `POST /api/chat` — SSE endpoint streaming Claude responses
-- [ ] Anthropic SDK integration (verify model ID against current catalog)
-- [ ] System prompt builds context: current tasks (priority + due date) + today's habits
-- [ ] Context window policy: last 20 messages sent per request
-- [ ] Chat history persisted (ChatMessage with conversationId)
-- [ ] `git commit`: `phase-3a: chat SSE endpoint with Claude integration`
+### 3a — Chat Backend (Streaming) ✅
+- [x] `POST /api/chat` — SSE endpoint streaming Claude responses
+- [x] Anthropic SDK integration (verify model ID against current catalog)
+- [x] System prompt builds context: current tasks (priority + due date) + today's habits
+- [x] Context window policy: last 20 messages sent per request
+- [x] Chat history persisted (ChatMessage with conversationId)
+- [x] `git commit`: `phase-3a: chat SSE endpoint with Claude integration`
 
 ### 3b — OpenAI Fallback + Model Selection Backend
 - [ ] Optional OpenAI provider (only active if `OPENAI_API_KEY` set)
