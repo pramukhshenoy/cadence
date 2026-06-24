@@ -87,10 +87,10 @@ Git push follows each commit if a remote is configured.
 - [x] Chat history persisted (ChatMessage with conversationId)
 - [x] `git commit`: `phase-3a: chat SSE endpoint with Claude integration`
 
-### 3b — OpenAI Fallback + Model Selection Backend
-- [ ] Optional OpenAI provider (only active if `OPENAI_API_KEY` set)
-- [ ] `GET /api/chat/models` — returns available models based on configured keys
-- [ ] `git commit`: `phase-3b: optional OpenAI fallback and model list endpoint`
+### 3b — OpenAI Fallback + Model Selection Backend ✅
+- [x] Optional OpenAI provider (only active if `OPENAI_API_KEY` set)
+- [x] `GET /api/chat/models` — returns available models based on configured keys
+- [x] `git commit`: `phase-3b: optional OpenAI fallback and model list endpoint`
 
 ### 3c — Chat UI (Mobile) ✅
 - [x] Full-screen chat interface
@@ -99,10 +99,10 @@ Git push follows each commit if a remote is configured.
 - [x] "New conversation" action (generates new conversationId)
 - [x] `git commit`: `phase-3c: chat UI with SSE streaming`
 
-### 3d — Settings Screen (Mobile)
-- [ ] Model selector (hides OpenAI if key not configured)
-- [ ] Server URL override field
-- [ ] `git commit`: `phase-3d: settings screen`
+### 3d — Settings Screen (Mobile) ✅
+- [x] Model selector (hides OpenAI if key not configured)
+- [x] Server URL override field
+- [x] `git commit`: `phase-3d: settings screen`
 
 ---
 
