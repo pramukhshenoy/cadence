@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/errorHandler';
 import tasksRouter from './routes/tasks';
 import habitsRouter from './routes/habits';
 import chatRouter from './routes/chat';
+import settingsRouter from './routes/settings';
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use(authMiddleware);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/habits', habitsRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/settings', settingsRouter);
 app.use(errorHandler);
 
 export default app;

@@ -14,6 +14,15 @@ jest.mock('@anthropic-ai/sdk', () => {
   return { __esModule: true, default: MockAnthropic };
 });
 
+jest.mock('openai', () => {
+  const mockCreate = jest.fn();
+  const MockOpenAI = jest.fn().mockImplementation(() => ({
+    chat: { completions: { create: mockCreate } },
+  }));
+  (MockOpenAI as unknown as Record<string, unknown>).__mockCreate = mockCreate;
+  return { __esModule: true, default: MockOpenAI };
+});
+
 jest.mock('../lib/prisma', () => ({
   __esModule: true,
   default: {
@@ -49,6 +58,20 @@ function getMockCreate() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Anthropic = require('@anthropic-ai/sdk').default;
   return (Anthropic as unknown as Record<string, unknown>).__mockCreate as jest.Mock;
+}
+
+function getOpenAIMockCreate() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const OpenAI = require('openai').default;
+  return (OpenAI as unknown as Record<string, unknown>).__mockCreate as jest.Mock;
+}
+
+function makeOpenAIStream(chunks: string[]) {
+  return (async function* () {
+    for (const text of chunks) {
+      yield { choices: [{ delta: { content: text } }] };
+    }
+  })();
 }
 
 function makeStream(chunks: string[]) {
@@ -90,11 +113,13 @@ const mockSettings = {
   updatedAt: new Date(),
 };
 
-const ORIG_API_KEY = process.env.ANTHROPIC_API_KEY;
+const ORIG_ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const ORIG_OPENAI_KEY = process.env.OPENAI_API_KEY;
 
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.ANTHROPIC_API_KEY = 'test-key';
+  delete process.env.OPENAI_API_KEY;
 
   (prisma.chatMessage.create as jest.Mock).mockResolvedValue({});
   (prisma.chatMessage.findMany as jest.Mock).mockResolvedValue([]);
@@ -106,7 +131,8 @@ beforeEach(() => {
 });
 
 afterAll(() => {
-  process.env.ANTHROPIC_API_KEY = ORIG_API_KEY;
+  process.env.ANTHROPIC_API_KEY = ORIG_ANTHROPIC_KEY;
+  process.env.OPENAI_API_KEY = ORIG_OPENAI_KEY;
 });
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -134,13 +160,22 @@ describe('POST /api/chat validation', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when model does not start with claude-', async () => {
+  it('returns 400 when model is not a valid Claude or GPT prefix', async () => {
+    const res = await request(app)
+      .post('/api/chat')
+      .set(HEADERS)
+      .send({ conversationId: 'conv1', message: 'hello', model: 'invalid-model' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Claude or GPT/);
+  });
+
+  it('returns 500 when gpt model is requested but OPENAI_API_KEY is not set', async () => {
     const res = await request(app)
       .post('/api/chat')
       .set(HEADERS)
       .send({ conversationId: 'conv1', message: 'hello', model: 'gpt-4o' });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/Claude model/);
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/OPENAI_API_KEY/);
   });
 
   it('returns 500 when ANTHROPIC_API_KEY is not set', async () => {
@@ -254,6 +289,58 @@ describe('POST /api/chat success', () => {
     getMockCreate().mockResolvedValue(makeStream([])); // empty stream
     await postChat({ conversationId: 'conv1', message: 'Hello' });
     expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+// ─── OpenAI streaming ────────────────────────────────────────────────────────
+
+describe('POST /api/chat OpenAI', () => {
+  beforeEach(() => {
+    process.env.OPENAI_API_KEY = 'test-openai-key';
+    getOpenAIMockCreate().mockResolvedValue(makeOpenAIStream(['Hello', ' world']));
+  });
+
+  it('streams assistant response via OpenAI when model starts with gpt-', async () => {
+    const res = await postChat({ conversationId: 'conv1', message: 'Hi', model: 'gpt-4o' });
+    expect(res.status).toBe(200);
+    const events = parseSSE(res.body as string);
+    expect(events).toContainEqual({ type: 'delta', content: 'Hello' });
+    expect(events).toContainEqual({ type: 'delta', content: ' world' });
+    expect(events[events.length - 1]).toEqual({ type: 'done' });
+  });
+
+  it('routes gpt model to OpenAI, not Anthropic', async () => {
+    await postChat({ conversationId: 'conv1', message: 'Hi', model: 'gpt-4o' });
+    expect(getMockCreate()).not.toHaveBeenCalled();
+    expect(getOpenAIMockCreate()).toHaveBeenCalled();
+  });
+});
+
+// ─── Models endpoint ──────────────────────────────────────────────────────────
+
+describe('GET /api/chat/models', () => {
+  it('returns only claude models when OPENAI_API_KEY is not set', async () => {
+    const res = await request(app).get('/api/chat/models').set(HEADERS);
+    expect(res.status).toBe(200);
+    const ids = (res.body.models as Array<{ id: string }>).map((m) => m.id);
+    expect(ids.every((id) => id.startsWith('claude-'))).toBe(true);
+    expect(ids.some((id) => id.startsWith('gpt-'))).toBe(false);
+  });
+
+  it('includes gpt models when OPENAI_API_KEY is set', async () => {
+    process.env.OPENAI_API_KEY = 'test-openai-key';
+    const res = await request(app).get('/api/chat/models').set(HEADERS);
+    expect(res.status).toBe(200);
+    const ids = (res.body.models as Array<{ id: string }>).map((m) => m.id);
+    expect(ids.some((id) => id.startsWith('gpt-'))).toBe(true);
+  });
+
+  it('each model has id and label', async () => {
+    const res = await request(app).get('/api/chat/models').set(HEADERS);
+    for (const model of res.body.models as Array<{ id: string; label: string }>) {
+      expect(typeof model.id).toBe('string');
+      expect(typeof model.label).toBe('string');
+    }
   });
 });
 
