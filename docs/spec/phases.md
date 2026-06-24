@@ -108,13 +108,13 @@ Git push follows each commit if a remote is configured.
 
 ## Phase 4 — Calendar Auto-Blocking
 
-### 4a — Dev Build + Permissions + Calendar Selection
-- [ ] EAS `eas.json` with development profile configured
-- [ ] expo-calendar permission request on first launch
-- [ ] Calendar selection screen: pick source calendars (read) + target calendar (write)
-- [ ] Option to create a new "AI Focus Blocks" local calendar
-- [ ] Persist `targetCalendarId` in Settings (via backend)
-- [ ] `git commit`: `phase-4a: expo-calendar permissions and calendar selection`
+### 4a — Dev Build + Permissions + Calendar Selection ✅
+- [x] EAS `eas.json` with development profile configured
+- [x] expo-calendar permission request on first launch
+- [x] Calendar selection screen: pick source calendars (read) + target calendar (write)
+- [x] Option to create a new "AI Focus Blocks" local calendar
+- [x] Persist `targetCalendarId` in Settings (via backend)
+- [x] `git commit`: `phase-4a: expo-calendar permissions and calendar selection`
 
 ### 4b — Scheduling Algorithm (Backend)
 - [ ] `/api/calendar/sync` endpoint: receives events list + timezone
