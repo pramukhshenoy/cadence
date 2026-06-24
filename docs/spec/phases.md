@@ -68,12 +68,12 @@ Git push follows each commit if a remote is configured.
 - [x] Filter bar (status, priority)
 - [x] `git commit`: `phase-2c: tasks screen`
 
-### 2d — Habits Screen + Dashboard (Mobile)
-- [ ] Habit checklist screen (only today's habits shown)
-- [ ] Tap to complete/uncomplete
-- [ ] Streak display per habit
-- [ ] Dashboard: tasks-due-today card, habits-today card
-- [ ] `git commit`: `phase-2d: habits screen and dashboard cards`
+### 2d — Habits Screen + Dashboard (Mobile) ✅
+- [x] Habit checklist screen (only today's habits shown)
+- [x] Tap to complete/uncomplete
+- [x] Streak display per habit
+- [x] Dashboard: tasks-due-today card, habits-today card
+- [x] `git commit`: `phase-2d: habits screen and dashboard cards`
 
 ---
 
