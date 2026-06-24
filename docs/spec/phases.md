@@ -61,12 +61,12 @@ Git push follows each commit if a remote is configured.
 - [x] Jest tests including streak edge cases
 - [x] `git commit`: `phase-2b: habits REST API with streak logic`
 
-### 2c — Tasks Screen (Mobile)
-- [ ] Task list screen grouped by priority or due date
-- [ ] Inline create/edit (no modal)
-- [ ] Swipe-to-complete and swipe-to-delete
-- [ ] Filter bar (status, priority)
-- [ ] `git commit`: `phase-2c: tasks screen`
+### 2c — Tasks Screen (Mobile) ✅
+- [x] Task list screen grouped by priority or due date
+- [x] Inline create/edit (no modal)
+- [x] Swipe-to-complete and swipe-to-delete
+- [x] Filter bar (status, priority)
+- [x] `git commit`: `phase-2c: tasks screen`
 
 ### 2d — Habits Screen + Dashboard (Mobile)
 - [ ] Habit checklist screen (only today's habits shown)
