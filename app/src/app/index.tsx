@@ -5,9 +5,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing, BottomTabInset } from '@/constants/theme';
+import { Spacing, BottomTabInset, CardShadow } from '@/constants/theme';
 import { useTasks } from '@/lib/tasks';
 import { useHabits } from '@/lib/habits';
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 function todayMidnight(): Date {
   const d = new Date();
@@ -46,39 +53,57 @@ export default function DashboardScreen() {
 
   const habitsTotal = habits.length;
   const habitsDone = habits.filter((h) => h.completedToday).length;
+  const habitsAllDone = habitsTotal > 0 && habitsDone === habitsTotal;
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="title" style={styles.title}>
-            Dashboard
-          </ThemedText>
+          <View style={styles.header}>
+            <Text style={[styles.greetingLabel, { color: theme.textSecondary }]}>
+              {greeting()}
+            </Text>
+            <ThemedText type="title">Dashboard</ThemedText>
+          </View>
 
           <View style={styles.cards}>
-            <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                CardShadow,
+              ]}>
               <Text style={[styles.cardLabel, { color: theme.textSecondary }]}>
                 TASKS DUE TODAY
               </Text>
               <Text style={[styles.cardNumber, { color: theme.text }]}>
                 {tasksDueTodayCount}
               </Text>
-              {overdueCount > 0 && (
+              {overdueCount > 0 ? (
                 <Text style={styles.overdueNote}>{overdueCount} overdue</Text>
+              ) : (
+                <Text style={[styles.cardSub, { color: theme.textSecondary }]}>
+                  {tasksDueTodayCount === 0 ? 'Nothing due' : 'On track'}
+                </Text>
               )}
             </View>
 
-            <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                CardShadow,
+              ]}>
               <Text style={[styles.cardLabel, { color: theme.textSecondary }]}>
                 HABITS TODAY
               </Text>
-              <Text style={[styles.cardNumber, { color: theme.text }]}>
+              <Text style={[styles.cardNumber, { color: habitsAllDone ? theme.accent : theme.text }]}>
                 {habitsDone}/{habitsTotal}
               </Text>
               <Text style={[styles.cardSub, { color: theme.textSecondary }]}>
                 {habitsTotal === 0
-                  ? 'No habits'
-                  : habitsDone === habitsTotal
+                  ? 'No habits yet'
+                  : habitsAllDone
                   ? 'All done!'
                   : `${habitsTotal - habitsDone} remaining`}
               </Text>
@@ -95,18 +120,24 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: {
     padding: Spacing.four,
-    gap: Spacing.three,
+    gap: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.three,
   },
-  title: {
-    marginBottom: Spacing.one,
+  header: {
+    gap: Spacing.one,
+  },
+  greetingLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
   cards: {
     gap: Spacing.three,
   },
   card: {
-    borderRadius: 12,
-    padding: Spacing.three,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: Spacing.four,
     gap: Spacing.one,
   },
   cardLabel: {
@@ -115,15 +146,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   cardNumber: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: '700',
-    lineHeight: 44,
+    lineHeight: 48,
+    letterSpacing: -1,
   },
   cardSub: {
     fontSize: 13,
+    fontWeight: '500',
   },
   overdueNote: {
     fontSize: 13,
-    color: '#ef4444',
+    fontWeight: '500',
+    color: '#EF4444',
   },
 });

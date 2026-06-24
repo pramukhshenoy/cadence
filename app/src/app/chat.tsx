@@ -24,14 +24,14 @@ function MessageBubble({ message, theme }: { message: ChatMessage; theme: Return
         style={[
           styles.bubble,
           isUser
-            ? [styles.bubbleUser, { backgroundColor: '#3c87f7' }]
-            : [styles.bubbleAssistant, { backgroundColor: theme.backgroundElement }],
+            ? [styles.bubbleUser, { backgroundColor: theme.accent }]
+            : [styles.bubbleAssistant, { backgroundColor: theme.backgroundElement, borderColor: theme.border }],
         ]}
       >
         {!isUser && message.content === '' ? (
-          <Text style={[styles.bubbleText, { color: theme.textSecondary }]}>...</Text>
+          <Text style={[styles.bubbleText, { color: theme.textSecondary }]}>…</Text>
         ) : (
-          <Text style={[styles.bubbleText, { color: isUser ? '#ffffff' : theme.text }]}>
+          <Text style={[styles.bubbleText, { color: isUser ? theme.accentForeground : theme.text }]}>
             {message.content}
           </Text>
         )}
@@ -62,19 +62,21 @@ export default function ChatScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: theme.backgroundElement }]}>
+        <View style={[styles.header, { borderBottomColor: theme.border }]}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Chat</Text>
           <Pressable
             onPress={newConversation}
-            style={({ pressed }) => [styles.newButton, pressed && { opacity: 0.6 }]}
+            style={({ pressed }) => [
+              styles.newButton,
+              { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+              pressed && { opacity: 0.6 },
+            ]}
             accessibilityLabel="New conversation"
           >
-            <Text style={styles.newButtonText}>New</Text>
+            <Text style={[styles.newButtonText, { color: theme.text }]}>New</Text>
           </Pressable>
         </View>
 
-        {/* Message list */}
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -98,17 +100,15 @@ export default function ChatScreen() {
             />
           )}
 
-          {/* Error banner */}
           {error !== null && (
-            <View style={[styles.errorBanner, { backgroundColor: '#ff3b30' }]}>
+            <View style={[styles.errorBanner, { backgroundColor: '#EF4444' }]}>
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
 
-          {/* Input bar */}
-          <View style={[styles.inputBar, { backgroundColor: theme.backgroundElement, borderTopColor: theme.backgroundElement }]}>
+          <View style={[styles.inputBar, { backgroundColor: theme.backgroundElement, borderTopColor: theme.border }]}>
             <TextInput
-              style={[styles.textInput, { color: theme.text, backgroundColor: theme.background }]}
+              style={[styles.textInput, { color: theme.text, backgroundColor: theme.background, borderColor: theme.border }]}
               placeholder="Message"
               placeholderTextColor={theme.textSecondary}
               value={input}
@@ -124,17 +124,16 @@ export default function ChatScreen() {
               disabled={!input.trim() || isStreaming}
               style={({ pressed }) => [
                 styles.sendButton,
-                { backgroundColor: '#3c87f7' },
+                { backgroundColor: theme.accent },
                 (!input.trim() || isStreaming) && styles.sendButtonDisabled,
                 pressed && { opacity: 0.7 },
               ]}
               accessibilityLabel="Send"
             >
-              <Text style={styles.sendButtonText}>↑</Text>
+              <Text style={[styles.sendButtonText, { color: theme.accentForeground }]}>↑</Text>
             </Pressable>
           </View>
 
-          {/* Bottom inset so input clears the tab bar */}
           <View style={{ height: BottomTabInset }} />
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -157,18 +156,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '600',
-    lineHeight: 40,
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
   newButton: {
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    borderRadius: 16,
-    backgroundColor: '#3c87f7',
+    paddingVertical: Spacing.one + 2,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   newButtonText: {
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -201,6 +200,7 @@ const styles = StyleSheet.create({
   },
   bubbleAssistant: {
     borderBottomLeftRadius: 4,
+    borderWidth: 1,
   },
   bubbleText: {
     fontSize: 16,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.three,
     marginBottom: Spacing.two,
     padding: Spacing.two,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   errorText: {
     color: '#ffffff',
@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
     maxHeight: 120,
     borderRadius: 20,
+    borderWidth: 1,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
@@ -258,10 +259,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sendButtonDisabled: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
   sendButtonText: {
-    color: '#ffffff',
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 22,

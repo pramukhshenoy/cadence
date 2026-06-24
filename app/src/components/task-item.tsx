@@ -2,13 +2,13 @@ import React, { useRef, useState } from 'react';
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
+import { Spacing, CardShadow } from '@/constants/theme';
 import type { Task, Priority, UpdateTaskPayload } from '@/types/task';
 
 const PRIORITY_COLOR: Record<Priority, string> = {
-  HIGH: '#ef4444',
-  MEDIUM: '#f59e0b',
-  LOW: '#6b7280',
+  HIGH: '#EF4444',
+  MEDIUM: '#F59E0B',
+  LOW: '#6B7280',
 };
 
 const PRIORITIES: Priority[] = ['HIGH', 'MEDIUM', 'LOW'];
@@ -53,7 +53,7 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
     <View
       style={[
         styles.action,
-        { backgroundColor: task.status === 'DONE' ? '#6b7280' : '#22c55e' },
+        { backgroundColor: task.status === 'DONE' ? '#6B7280' : '#22C55E' },
       ]}>
       <Text style={styles.actionLabel}>
         {task.status === 'DONE' ? 'Undo' : 'Done'}
@@ -62,7 +62,7 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
   );
 
   const renderDeleteAction = () => (
-    <View style={[styles.action, { backgroundColor: '#ef4444' }]}>
+    <View style={[styles.action, { backgroundColor: '#EF4444' }]}>
       <Text style={styles.actionLabel}>Delete</Text>
     </View>
   );
@@ -86,9 +86,17 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
           onDelete(task.id);
         }
       }}>
-      <View style={[styles.row, { backgroundColor: theme.backgroundElement }]}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.backgroundElement,
+            borderColor: theme.border,
+          },
+          CardShadow,
+        ]}>
         {editing ? (
-          <View style={[styles.editForm, { backgroundColor: theme.backgroundElement }]}>
+          <View style={styles.editForm}>
             <TextInput
               value={editTitle}
               onChangeText={setEditTitle}
@@ -96,7 +104,7 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
                 styles.editInput,
                 {
                   color: theme.text,
-                  borderBottomColor: theme.backgroundSelected,
+                  borderBottomColor: theme.border,
                 },
               ]}
               autoFocus
@@ -131,8 +139,8 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
             <View style={styles.editButtons}>
               <Pressable
                 onPress={saveEdit}
-                style={[styles.btn, { backgroundColor: '#3c87f7' }]}>
-                <Text style={[styles.btnLabel, { color: '#fff' }]}>Save</Text>
+                style={[styles.btn, { backgroundColor: theme.accent }]}>
+                <Text style={[styles.btnLabel, { color: theme.accentForeground }]}>Save</Text>
               </Pressable>
               <Pressable
                 onPress={cancelEdit}
@@ -166,7 +174,7 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
                 {task.title}
               </Text>
               {task.dueDate != null && (
-                <Text style={[styles.due, { color: isOverdue(task.dueDate) && !isDone ? '#ef4444' : theme.textSecondary }]}>
+                <Text style={[styles.due, { color: isOverdue(task.dueDate) && !isDone ? '#EF4444' : theme.textSecondary }]}>
                   {formatDue(task.dueDate)}
                 </Text>
               )}
@@ -217,14 +225,18 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 const styles = StyleSheet.create({
-  row: {
-    marginBottom: 1,
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginHorizontal: Spacing.three,
+    marginBottom: Spacing.two,
+    overflow: 'hidden',
   },
   viewContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 4,
+    paddingVertical: Spacing.two + 6,
     gap: Spacing.two,
   },
   priorityDot: {
@@ -237,7 +249,7 @@ const styles = StyleSheet.create({
   },
   info: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   taskTitle: {
     fontSize: 15,
@@ -254,14 +266,16 @@ const styles = StyleSheet.create({
   inProgressBadge: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#f59e0b',
+    color: '#F59E0B',
     flexShrink: 0,
   },
   action: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
-    marginBottom: 1,
+    marginHorizontal: Spacing.three,
+    marginBottom: Spacing.two,
+    borderRadius: 12,
   },
   actionLabel: {
     color: '#fff',
@@ -284,7 +298,7 @@ const styles = StyleSheet.create({
   },
   priorityChip: {
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 6,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
   },
@@ -300,7 +314,7 @@ const styles = StyleSheet.create({
   btn: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one + 2,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   btnLabel: {
     fontSize: 13,

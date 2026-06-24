@@ -48,16 +48,14 @@ function ChipRow<T extends string>({
               style={[
                 styles.chip,
                 {
-                  backgroundColor: active
-                    ? theme.backgroundSelected
-                    : theme.backgroundElement,
-                  borderColor: active ? theme.text : theme.backgroundSelected,
+                  backgroundColor: active ? theme.accent : theme.backgroundElement,
+                  borderColor: active ? theme.accent : theme.border,
                 },
               ]}>
               <Text
                 style={[
                   styles.chipLabel,
-                  { color: active ? theme.text : theme.textSecondary },
+                  { color: active ? theme.accentForeground : theme.textSecondary },
                 ]}>
                 {opt.label}
               </Text>
@@ -103,7 +101,7 @@ export function FilterBar({
   const theme = useTheme();
 
   return (
-    <View style={[styles.container, { borderBottomColor: theme.backgroundSelected }]}>
+    <View style={[styles.container, { borderBottomColor: theme.border }]}>
       <ChipRow
         label="Status"
         options={STATUS_OPTIONS}
@@ -120,7 +118,7 @@ export function FilterBar({
         <Text style={[styles.rowLabel, { color: theme.textSecondary }]}>
           Group
         </Text>
-        <View style={styles.groupToggle}>
+        <View style={[styles.groupToggle, { backgroundColor: theme.backgroundSelected, borderColor: theme.border }]}>
           {(['priority', 'due-date'] as const).map((g) => {
             const active = groupBy === g;
             return (
@@ -129,11 +127,7 @@ export function FilterBar({
                 onPress={() => onGroupByChange(g)}
                 style={[
                   styles.groupBtn,
-                  {
-                    backgroundColor: active
-                      ? theme.backgroundSelected
-                      : 'transparent',
-                  },
+                  active && { backgroundColor: theme.backgroundElement },
                 ]}>
                 <Text
                   style={[
@@ -174,7 +168,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   chip: {
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: Spacing.two + 2,
     paddingVertical: Spacing.one,
@@ -193,13 +187,14 @@ const styles = StyleSheet.create({
   groupToggle: {
     flexDirection: 'row',
     borderRadius: 8,
-    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 2,
     gap: 2,
   },
   groupBtn: {
     paddingHorizontal: Spacing.two + 2,
     paddingVertical: Spacing.one,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   groupBtnLabel: {
     fontSize: 13,

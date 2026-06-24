@@ -8,15 +8,15 @@ import {
   Keyboard,
 } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
+import { Spacing, CardShadow } from '@/constants/theme';
 import type { Priority } from '@/types/task';
 
 const PRIORITIES: Priority[] = ['HIGH', 'MEDIUM', 'LOW'];
 
 const PRIORITY_COLOR: Record<Priority, string> = {
-  HIGH: '#ef4444',
-  MEDIUM: '#f59e0b',
-  LOW: '#6b7280',
+  HIGH: '#EF4444',
+  MEDIUM: '#F59E0B',
+  LOW: '#6B7280',
 };
 
 interface AddTaskProps {
@@ -36,7 +36,6 @@ export function AddTask({ onAdd }: AddTaskProps) {
     onAdd(trimmed, priority);
     setTitle('');
     setPriority('MEDIUM');
-    // Stay expanded for quick multi-add; user can tap Cancel to close
     inputRef.current?.focus();
   }
 
@@ -50,11 +49,15 @@ export function AddTask({ onAdd }: AddTaskProps) {
   return (
     <View
       style={[
-        styles.container,
-        { backgroundColor: theme.backgroundElement, borderBottomColor: theme.backgroundSelected },
+        styles.card,
+        {
+          backgroundColor: theme.backgroundElement,
+          borderColor: theme.border,
+        },
+        CardShadow,
       ]}>
       <View style={styles.inputRow}>
-        <Text style={[styles.plus, { color: theme.textSecondary }]}>+</Text>
+        <Text style={[styles.plus, { color: theme.accent }]}>+</Text>
         <TextInput
           ref={inputRef}
           value={title}
@@ -68,13 +71,16 @@ export function AddTask({ onAdd }: AddTaskProps) {
           blurOnSubmit={false}
         />
         {expanded && (
-          <Pressable onPress={submit} disabled={!title.trim()} style={[styles.addBtn, { opacity: title.trim() ? 1 : 0.35 }]}>
-            <Text style={styles.addBtnLabel}>Add</Text>
+          <Pressable
+            onPress={submit}
+            disabled={!title.trim()}
+            style={[styles.addBtn, { backgroundColor: theme.accent, opacity: title.trim() ? 1 : 0.35 }]}>
+            <Text style={[styles.addBtnLabel, { color: theme.accentForeground }]}>Add</Text>
           </Pressable>
         )}
       </View>
       {expanded && (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { borderTopColor: theme.border }]}>
           <View style={styles.priorityRow}>
             {PRIORITIES.map((p) => (
               <Pressable
@@ -107,9 +113,12 @@ export function AddTask({ onAdd }: AddTaskProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: Spacing.two,
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginHorizontal: Spacing.three,
+    marginBottom: Spacing.three,
+    overflow: 'hidden',
   },
   inputRow: {
     flexDirection: 'row',
@@ -119,8 +128,8 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   plus: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: '400',
   },
   input: {
@@ -129,13 +138,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   addBtn: {
-    backgroundColor: '#3c87f7',
     paddingHorizontal: Spacing.two + 4,
     paddingVertical: Spacing.one + 2,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   addBtnLabel: {
-    color: '#fff',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -144,7 +151,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.two + 4,
+    paddingVertical: Spacing.two + 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   priorityRow: {
     flexDirection: 'row',
@@ -152,7 +160,7 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 6,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
   },
