@@ -8,7 +8,10 @@ const router = Router();
 router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const settings = await getSettings(prisma);
-    res.json({ preferredModel: settings.preferredModel });
+    res.json({
+      preferredModel: settings.preferredModel,
+      targetCalendarId: settings.targetCalendarId,
+    });
   } catch (err) {
     next(err);
   }
@@ -16,28 +19,47 @@ router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
 
 router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { preferredModel } = (req.body ?? {}) as { preferredModel: unknown };
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const { preferredModel, targetCalendarId } = body;
 
-    if (preferredModel === undefined) {
-      res.status(400).json({ error: 'preferredModel is required' });
+    if (preferredModel === undefined && targetCalendarId === undefined) {
+      res.status(400).json({ error: 'At least one of preferredModel or targetCalendarId is required' });
       return;
     }
-    if (typeof preferredModel !== 'string' || !preferredModel.trim()) {
-      res.status(400).json({ error: 'preferredModel must be a non-empty string' });
-      return;
+
+    const update: { preferredModel?: string; targetCalendarId?: string | null } = {};
+
+    if (preferredModel !== undefined) {
+      if (typeof preferredModel !== 'string' || !preferredModel.trim()) {
+        res.status(400).json({ error: 'preferredModel must be a non-empty string' });
+        return;
+      }
+      const trimmed = preferredModel.trim();
+      if (!isValidModelId(trimmed)) {
+        res.status(400).json({ error: 'preferredModel must be a valid Claude or GPT model ID' });
+        return;
+      }
+      update.preferredModel = trimmed;
     }
-    const trimmed = preferredModel.trim();
-    if (!isValidModelId(trimmed)) {
-      res.status(400).json({ error: 'preferredModel must be a valid Claude or GPT model ID' });
-      return;
+
+    if (targetCalendarId !== undefined) {
+      if (targetCalendarId !== null && typeof targetCalendarId !== 'string') {
+        res.status(400).json({ error: 'targetCalendarId must be a string or null' });
+        return;
+      }
+      update.targetCalendarId = targetCalendarId as string | null;
     }
 
     const updated = await prisma.settings.upsert({
       where: { id: 'singleton' },
-      update: { preferredModel: trimmed },
-      create: { id: 'singleton', preferredModel: trimmed },
+      update,
+      create: { id: 'singleton', ...update },
     });
-    res.json({ preferredModel: updated.preferredModel });
+
+    res.json({
+      preferredModel: updated.preferredModel,
+      targetCalendarId: updated.targetCalendarId,
+    });
   } catch (err) {
     next(err);
   }

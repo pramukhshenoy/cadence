@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -146,6 +147,23 @@ export default function SettingsScreen() {
             </View>
           )}
 
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>CALENDAR</Text>
+            <View style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }, CardShadow]}>
+              <Pressable
+                onPress={() => router.push('/calendar-setup')}
+                style={({ pressed }) => [styles.calendarRow, pressed && { opacity: 0.7 }]}>
+                <View style={styles.calendarRowContent}>
+                  <Text style={[styles.fieldLabel, { color: theme.text }]}>Focus Block Calendar</Text>
+                  <Text style={[styles.calendarHint, { color: theme.textSecondary }]}>
+                    {appSettings?.targetCalendarId ? 'Configured ✓' : 'Not set up yet'}
+                  </Text>
+                </View>
+                <Text style={[styles.chevron, { color: theme.textSecondary }]}>›</Text>
+              </Pressable>
+            </View>
+          </View>
+
           <Pressable
             disabled={isSaveDisabled}
             style={({ pressed }) => [
@@ -248,4 +266,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.2,
   },
+  calendarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two + 6,
+  },
+  calendarRowContent: { flex: 1 },
+  calendarHint: { fontSize: 12, marginTop: 2 },
+  chevron: { fontSize: 20, fontWeight: '300' },
 });

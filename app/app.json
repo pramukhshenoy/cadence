@@ -17,7 +17,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"]
     },
     "web": {
       "output": "static",
@@ -25,6 +26,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow Cadence to read your calendar events for scheduling focus blocks."
+        }
+      ],
       [
         "expo-splash-screen",
         {

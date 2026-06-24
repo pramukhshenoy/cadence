@@ -12,6 +12,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { queryClient } from '@/lib/query-client';
+import { getCalendarPermissionStatus, requestCalendarPermissions } from '@/lib/calendar';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? Appearance.getColorScheme() ?? 'light';
@@ -20,6 +21,14 @@ export default function TabLayout() {
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(Colors[scheme].background);
   }, [scheme]);
+
+  useEffect(() => {
+    getCalendarPermissionStatus().then((status) => {
+      if (status === 'undetermined') {
+        requestCalendarPermissions().catch(() => {});
+      }
+    }).catch(() => {});
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

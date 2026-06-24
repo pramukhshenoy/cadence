@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Text, View, StyleSheet, ColorValue } from 'react-native';
-import { useColorScheme } from 'react-native';
+import { Text, View, StyleSheet, ColorValue, useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 
@@ -82,13 +81,15 @@ const iconStyles = StyleSheet.create({
   },
 });
 
-const TABS: Array<{ name: string; title: string; icon: TabName }> = [
+const TABS: { name: string; title: string; icon: TabName }[] = [
   { name: 'index', title: 'Dashboard', icon: 'home' },
   { name: 'tasks', title: 'Tasks', icon: 'tasks' },
   { name: 'habits', title: 'Habits', icon: 'habits' },
   { name: 'chat', title: 'Chat', icon: 'chat' },
   { name: 'settings', title: 'Settings', icon: 'settings' },
 ];
+
+const HIDDEN_SCREENS = ['calendar-setup'];
 
 export default function AppTabs() {
   const scheme = useColorScheme() ?? 'light';
@@ -122,6 +123,9 @@ export default function AppTabs() {
             ),
           }}
         />
+      ))}
+      {HIDDEN_SCREENS.map((name) => (
+        <Tabs.Screen key={name} name={name} options={{ href: null }} />
       ))}
     </Tabs>
   );

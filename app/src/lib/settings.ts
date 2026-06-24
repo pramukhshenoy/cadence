@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api-client';
 
 export type ModelOption = { id: string; label: string };
+export type AppSettings = { preferredModel: string; targetCalendarId: string | null };
 
 export const MODELS_QUERY_KEY = ['chat-models'] as const;
 export const SETTINGS_QUERY_KEY = ['app-settings'] as const;
@@ -19,12 +20,12 @@ export function useChatModels() {
 }
 
 export function useAppSettings() {
-  return useQuery<{ preferredModel: string }>({
+  return useQuery<AppSettings>({
     queryKey: SETTINGS_QUERY_KEY,
     queryFn: async () => {
       const res = await apiFetch('/api/settings');
       if (!res.ok) throw new Error('Failed to fetch settings');
-      return res.json() as Promise<{ preferredModel: string }>;
+      return res.json() as Promise<AppSettings>;
     },
   });
 }
@@ -38,6 +39,20 @@ export function useUpdatePreferredModel() {
         body: JSON.stringify({ preferredModel }),
       });
       if (!res.ok) throw new Error('Failed to save model preference');
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY }),
+  });
+}
+
+export function useUpdateTargetCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (targetCalendarId: string): Promise<void> => {
+      const res = await apiFetch('/api/settings', {
+        method: 'PATCH',
+        body: JSON.stringify({ targetCalendarId }),
+      });
+      if (!res.ok) throw new Error('Failed to save calendar selection');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY }),
   });
