@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api-client';
-import type { Habit } from '@/types/habit';
+import type { Habit, Frequency } from '@/types/habit';
 
 export const HABITS_QUERY_KEY = ['habits'] as const;
 
@@ -12,6 +12,21 @@ export function useHabits() {
       if (!res.ok) throw new Error('Failed to fetch habits');
       return res.json() as Promise<Habit[]>;
     },
+  });
+}
+
+export function useCreateHabit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { name: string; frequency: Frequency }): Promise<Habit> => {
+      const res = await apiFetch('/api/habits', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Failed to create habit');
+      return res.json() as Promise<Habit>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: HABITS_QUERY_KEY }),
   });
 }
 

@@ -4,6 +4,7 @@ import * as SystemUI from 'expo-system-ui';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
 import { Appearance } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -21,12 +22,14 @@ export default function TabLayout() {
   }, [scheme]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <StatusBar style="auto" />
-        <AnimatedSplashOverlay />
-        <AppTabs />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <StatusBar style="auto" />
+          <AnimatedSplashOverlay />
+          <AppTabs />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

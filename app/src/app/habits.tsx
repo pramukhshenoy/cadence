@@ -5,17 +5,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { HabitItem } from '@/components/habit-item';
+import { AddHabit } from '@/components/habit-add';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, BottomTabInset } from '@/constants/theme';
-import { useHabits, useCompleteHabit, useUncompleteHabit } from '@/lib/habits';
+import { useHabits, useCreateHabit, useCompleteHabit, useUncompleteHabit } from '@/lib/habits';
+import type { Frequency } from '@/types/habit';
 
 export default function HabitsScreen() {
   const theme = useTheme();
   const { data: habits = [], isLoading, isError } = useHabits();
+  const createHabit = useCreateHabit();
   const completeHabit = useCompleteHabit();
   const uncompleteHabit = useUncompleteHabit();
 
   const doneCount = habits.filter((h) => h.completedToday).length;
+
+  function handleAdd(name: string, frequency: Frequency) {
+    createHabit.mutate({ name, frequency });
+  }
 
   function handleToggle(id: string, completedToday: boolean) {
     if (completedToday) {
@@ -36,6 +43,8 @@ export default function HabitsScreen() {
             </Text>
           )}
         </View>
+
+        <AddHabit onAdd={handleAdd} />
 
         {isLoading ? (
           <View style={styles.centered}>

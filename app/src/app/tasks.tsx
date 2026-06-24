@@ -133,6 +133,8 @@ export default function TasksScreen() {
           onGroupByChange={setGroupBy}
         />
 
+        <AddTask onAdd={handleAdd} />
+
         {isLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator color={theme.textSecondary} />
@@ -150,9 +152,6 @@ export default function TasksScreen() {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.listContent}
             stickySectionHeadersEnabled={false}
-            ListHeaderComponent={
-              <AddTask onAdd={handleAdd} />
-            }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
