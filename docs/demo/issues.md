@@ -119,6 +119,17 @@ All endpoints tested with `Authorization: Bearer change-me-before-use` and `X-Ti
 
 ---
 
+### ISSUE-009 — @expo/vector-icons v15 incompatible with React Compiler in Expo Go ✅ FIXED
+**Severity:** High (blocked app from loading)  
+**Screen:** All screens (Metro bundler error)  
+**Details:** `@expo/vector-icons` v15 added `'use client'` to its module files. With `reactCompiler: true` in `app.json`, Expo SDK 56's Metro treats these as RSC boundaries and fails to resolve the `.ttf` font asset imports — even though the font file physically exists.  
+**Error:** `None of these files exist: node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\Ionicons.ttf`  
+**Root cause:** `@expo/vector-icons/build/Ionicons.js` has `'use client'` directive → Metro RSC transform → binary asset resolution fails.  
+**Fix applied:** Removed `@expo/vector-icons` dependency entirely from `app-tabs.tsx`. Replaced with self-contained inline icon components using React Native `View`/`Text` with Unicode characters — no external font files needed.  
+**Additional note:** Expo Go also caches the error state. After fixing the code, `adb shell pm clear host.exp.exponent` is required to force Expo Go to fetch a fresh bundle.
+
+---
+
 ## User Feedback
 
 > *(Add feedback here as received)*
