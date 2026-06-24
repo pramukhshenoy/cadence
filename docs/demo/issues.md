@@ -103,6 +103,15 @@ The UIAutomator bounds are authoritative for touch input. **Always use `uiautoma
 
 ---
 
+### ISSUE-010 — GestureHandlerRootView missing — Tasks screen crashed on load ✅ FIXED
+**Severity:** High (blocked Tasks screen entirely)
+**Screen:** Tasks
+**Details:** `TaskItem` uses `GestureDetector` from `react-native-gesture-handler` for swipe-to-edit/delete. Without `GestureHandlerRootView` wrapping the app root, the component throws at mount: *"GestureDetector must be used as a descendant of GestureHandlerRootView."* This crashed the entire Tasks screen to a black/empty view.
+**Fix applied:** Added `GestureHandlerRootView style={{ flex: 1 }}` as the outermost wrapper in `app/src/app/_layout.tsx`, wrapping `QueryClientProvider` and the rest of the tree.
+**Additional note:** The crash was previously hidden — without a valid bearer token the Tasks API returned 401 (`isError=true`) so TaskItem never mounted. Once the bearer token was configured, the list loaded and TaskItem mounted, triggering the crash.
+
+---
+
 ## Backend API Test Results (via curl, 2026-06-24)
 
 All endpoints tested with `Authorization: Bearer change-me-before-use` and `X-Timezone: Asia/Kolkata`.
