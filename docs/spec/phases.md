@@ -179,10 +179,10 @@ Git push follows each commit if a remote is configured.
 - [ ] Focus block start alerts (15 min before)
 - [ ] `git commit`: `phase-6a: push notifications`
 
-### 6b — Dark Mode
-- [ ] NativeWind dark mode throughout all screens
-- [ ] Respects system preference
-- [ ] `git commit`: `phase-6b: dark mode`
+### 6b — Dark Mode ✅
+- [x] NativeWind dark mode throughout all screens
+- [x] Respects system preference
+- [x] `git commit`: `phase-6b: dark mode`
 
 ### 6c — Full Onboarding
 - [ ] Server URL + bearer token setup screen
