@@ -1,56 +1,61 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+const TABS: Array<{
+  name: string;
+  title: string;
+  icon: IoniconName;
+  iconFocused: IoniconName;
+}> = [
+  { name: 'index', title: 'Dashboard', icon: 'home-outline', iconFocused: 'home' },
+  { name: 'tasks', title: 'Tasks', icon: 'checkmark-circle-outline', iconFocused: 'checkmark-circle' },
+  { name: 'habits', title: 'Habits', icon: 'flame-outline', iconFocused: 'flame' },
+  { name: 'chat', title: 'Chat', icon: 'chatbubble-ellipses-outline', iconFocused: 'chatbubble-ellipses' },
+  { name: 'settings', title: 'Settings', icon: 'settings-outline', iconFocused: 'settings' },
+];
+
 export default function AppTabs() {
-  const scheme = useColorScheme();
+  const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.text,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: colors.backgroundElement,
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          marginBottom: 2,
+        },
+      }}>
+      {TABS.map(({ name, title, icon, iconFocused }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title,
+            tabBarIcon: ({ color, focused, size }) => (
+              <Ionicons
+                name={focused ? iconFocused : icon}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
         />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="tasks">
-        <NativeTabs.Trigger.Label>Tasks</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="habits">
-        <NativeTabs.Trigger.Label>Habits</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="chat">
-        <NativeTabs.Trigger.Label>Chat</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+      ))}
+    </Tabs>
   );
 }
