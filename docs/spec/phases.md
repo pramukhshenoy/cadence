@@ -92,12 +92,12 @@ Git push follows each commit if a remote is configured.
 - [ ] `GET /api/chat/models` — returns available models based on configured keys
 - [ ] `git commit`: `phase-3b: optional OpenAI fallback and model list endpoint`
 
-### 3c — Chat UI (Mobile)
-- [ ] Full-screen chat interface
-- [ ] SSE streaming client (custom hook, not TanStack Query)
-- [ ] Message bubbles (user / assistant)
-- [ ] "New conversation" action (generates new conversationId)
-- [ ] `git commit`: `phase-3c: chat UI with SSE streaming`
+### 3c — Chat UI (Mobile) ✅
+- [x] Full-screen chat interface
+- [x] SSE streaming client (custom hook, not TanStack Query)
+- [x] Message bubbles (user / assistant)
+- [x] "New conversation" action (generates new conversationId)
+- [x] `git commit`: `phase-3c: chat UI with SSE streaming`
 
 ### 3d — Settings Screen (Mobile)
 - [ ] Model selector (hides OpenAI if key not configured)
