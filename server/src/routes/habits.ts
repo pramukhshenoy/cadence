@@ -209,6 +209,29 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
   }
 });
 
+// ─── DELETE /api/habits/:id/complete ─────────────────────────────────────────
+
+router.delete('/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const today = todayLocalDate(req.timezone);
+
+    const habit = await prisma.habit.findUnique({ where: { id } });
+    if (!habit) {
+      res.status(404).json({ error: 'Habit not found' });
+      return;
+    }
+
+    await prisma.habitCompletion.deleteMany({
+      where: { habitId: id, localDate: today },
+    });
+
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── POST /api/habits/:id/complete ────────────────────────────────────────────
 
 router.post('/:id/complete', async (req: Request, res: Response, next: NextFunction) => {

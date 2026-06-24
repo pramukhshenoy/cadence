@@ -16,6 +16,7 @@ jest.mock('../lib/prisma', () => ({
     },
     habitCompletion: {
       upsert: jest.fn(),
+      deleteMany: jest.fn(),
     },
   },
 }));
@@ -470,6 +471,48 @@ describe('POST /api/habits/:id/complete', () => {
 
   it('returns 401 without auth', async () => {
     const res = await request(app).post('/api/habits/habit1/complete');
+    expect(res.status).toBe(401);
+  });
+});
+
+// ─── DELETE /api/habits/:id/complete ──────────────────────────────────────────
+
+describe('DELETE /api/habits/:id/complete', () => {
+  it('removes today\'s completion and returns 204', async () => {
+    (prisma.habit.findUnique as jest.Mock).mockResolvedValue(mockHabit);
+    (prisma.habitCompletion.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+    const res = await request(app)
+      .delete('/api/habits/habit1/complete')
+      .set('Authorization', AUTH)
+      .set(TZ_HEADER);
+    expect(res.status).toBe(204);
+    expect(prisma.habitCompletion.deleteMany).toHaveBeenCalledWith({
+      where: { habitId: 'habit1', localDate: FIXED_TODAY },
+    });
+  });
+
+  it('is idempotent — returns 204 even when no completion existed', async () => {
+    (prisma.habit.findUnique as jest.Mock).mockResolvedValue(mockHabit);
+    (prisma.habitCompletion.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+    const res = await request(app)
+      .delete('/api/habits/habit1/complete')
+      .set('Authorization', AUTH)
+      .set(TZ_HEADER);
+    expect(res.status).toBe(204);
+  });
+
+  it('returns 404 when habit does not exist', async () => {
+    (prisma.habit.findUnique as jest.Mock).mockResolvedValue(null);
+    const res = await request(app)
+      .delete('/api/habits/nope/complete')
+      .set('Authorization', AUTH)
+      .set(TZ_HEADER);
+    expect(res.status).toBe(404);
+    expect(prisma.habitCompletion.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 without auth', async () => {
+    const res = await request(app).delete('/api/habits/habit1/complete');
     expect(res.status).toBe(401);
   });
 });
