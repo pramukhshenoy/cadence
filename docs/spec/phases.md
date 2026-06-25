@@ -133,10 +133,10 @@ Git push follows each commit if a remote is configured.
 - [x] POST `deviceCalendarEventId` + `calendarMarker` pairs to backend to persist FocusBlock records
 - [x] `git commit`: `phase-4c: calendar sync flow`
 
-### 4d — Dashboard Focus Widget (Mobile)
-- [ ] Focus block widget: scheduled hours vs. elapsed this week
-- [ ] Shortfall notice if under-capacity
-- [ ] `git commit`: `phase-4d: dashboard focus block widget`
+### 4d — Dashboard Focus Widget (Mobile) ✅
+- [x] Focus block widget: scheduled hours vs. elapsed this week
+- [x] Shortfall notice if under-capacity
+- [x] `git commit`: `phase-4d: dashboard focus block widget`
 
 ---
 
