@@ -164,10 +164,10 @@ Git push follows each commit if a remote is configured.
 - [x] POST new deviceCalendarEventIds to backend
 - [x] `git commit`: `phase-5c: sleep-driven calendar reschedule flow`
 
-### 5d — Sleep Dashboard + Settings (Mobile)
-- [ ] Dashboard sleep card: "Last night: 6.1h (Fair) — 1 session rescheduled to 2pm"
-- [ ] Settings: sleep threshold, good threshold, morning cutoff hour
-- [ ] `git commit`: `phase-5d: sleep dashboard card and settings`
+### 5d — Sleep Dashboard + Settings (Mobile) ✅
+- [x] Dashboard sleep card: "Last night: 6.1h (Fair) — 1 session rescheduled to 2pm"
+- [x] Settings: sleep threshold, good threshold, morning cutoff hour
+- [x] `git commit`: `phase-5d: sleep dashboard card and settings`
 
 ---
 
