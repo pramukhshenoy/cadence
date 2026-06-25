@@ -143,12 +143,12 @@ Git push follows each commit if a remote is configured.
 ## Phase 5 — Sleep-Aware Rescheduling
 
 ### 5a — Health Connect Integration (Mobile)
-- [ ] `READ_SLEEP` permission request (requires dev build + physical device)
-- [ ] Read last night's sleep sessions on app open
-- [ ] Aggregate sessions: total duration, deep sleep, REM, session count
-- [ ] Derive quality using `sleepThresholdHours` / `goodThresholdHours` from Settings
-- [ ] Handle no-data case gracefully (show "No sleep data", skip reschedule)
-- [ ] `git commit`: `phase-5a: health connect sleep read`
+- [x] `READ_SLEEP` permission request (requires dev build + physical device)
+- [x] Read last night's sleep sessions on app open
+- [x] Aggregate sessions: total duration, deep sleep, REM, session count
+- [x] Derive quality using `sleepThresholdHours` / `goodThresholdHours` from Settings
+- [x] Handle no-data case gracefully (show "No sleep data", skip reschedule)
+- [x] `git commit`: `phase-5a: health connect sleep read`
 
 ### 5b — Sleep Backend
 - [ ] `POST /api/sleep` — persist SleepRecord (upsert on localDate to prevent duplicates)
