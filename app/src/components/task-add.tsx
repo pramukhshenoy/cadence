@@ -19,8 +19,29 @@ const PRIORITY_COLOR: Record<Priority, string> = {
   LOW: '#6B7280',
 };
 
+function toISODate(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
+
+function offsetDate(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
+}
+
+function formatDateShort(iso: string): string {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+const DATE_PRESETS = [
+  { label: 'Today', iso: () => offsetDate(0) },
+  { label: 'Tomorrow', iso: () => offsetDate(1) },
+  { label: 'Next week', iso: () => offsetDate(7) },
+];
+
 interface AddTaskProps {
-  onAdd: (title: string, priority: Priority) => void;
+  onAdd: (title: string, priority: Priority, dueDate: string | null) => void;
 }
 
 export function AddTask({ onAdd }: AddTaskProps) {
@@ -29,21 +50,28 @@ export function AddTask({ onAdd }: AddTaskProps) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('MEDIUM');
+  const [dueDate, setDueDate] = useState<string | null>(null);
 
   function submit() {
     const trimmed = title.trim();
     if (!trimmed) return;
-    onAdd(trimmed, priority);
+    onAdd(trimmed, priority, dueDate);
     setTitle('');
     setPriority('MEDIUM');
+    setDueDate(null);
     inputRef.current?.focus();
   }
 
   function dismiss() {
     setTitle('');
     setPriority('MEDIUM');
+    setDueDate(null);
     setExpanded(false);
     Keyboard.dismiss();
+  }
+
+  function togglePreset(iso: string) {
+    setDueDate((prev) => (prev === iso ? null : iso));
   }
 
   return (
@@ -108,6 +136,29 @@ export function AddTask({ onAdd }: AddTaskProps) {
           </Pressable>
         </View>
       )}
+      {expanded && (
+        <View style={[styles.dateRow, { borderTopColor: theme.border }]}>
+          <Text style={[styles.dateLabel, { color: theme.textSecondary }]}>Due</Text>
+          {DATE_PRESETS.map((preset) => {
+            const iso = preset.iso();
+            const active = dueDate === iso;
+            return (
+              <Pressable
+                key={preset.label}
+                onPress={() => togglePreset(iso)}
+                style={[
+                  styles.chip,
+                  { borderColor: theme.border },
+                  active && { backgroundColor: theme.accent, borderColor: theme.accent },
+                ]}>
+                <Text style={[styles.chipLabel, { color: active ? theme.accentForeground : theme.textSecondary }]}>
+                  {active ? formatDateShort(iso) : preset.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -153,6 +204,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 4,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.two + 4,
+    gap: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    flexShrink: 0,
   },
   priorityRow: {
     flexDirection: 'row',

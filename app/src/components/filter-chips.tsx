@@ -68,7 +68,7 @@ function ChipRow<T extends string>({
 }
 
 const STATUS_OPTIONS: ChipOption<TaskStatus>[] = [
-  { label: 'All', value: null },
+  { label: 'Active', value: null },
   { label: 'Todo', value: 'TODO' },
   { label: 'In Progress', value: 'IN_PROGRESS' },
   { label: 'Done', value: 'DONE' },

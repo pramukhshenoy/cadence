@@ -18,13 +18,24 @@ export function useHabits() {
 export function useCreateHabit() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { name: string; frequency: Frequency }): Promise<Habit> => {
+    mutationFn: async (payload: { name: string; frequency: Frequency; weeklyTargetDays?: number[] }): Promise<Habit> => {
       const res = await apiFetch('/api/habits', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to create habit');
       return res.json() as Promise<Habit>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: HABITS_QUERY_KEY }),
+  });
+}
+
+export function useDeleteHabit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      const res = await apiFetch(`/api/habits/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete habit');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: HABITS_QUERY_KEY }),
   });

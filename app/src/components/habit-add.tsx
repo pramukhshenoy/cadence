@@ -13,8 +13,18 @@ import type { Frequency } from '@/types/habit';
 
 const FREQUENCIES: Frequency[] = ['DAILY', 'WEEKLY'];
 
+const WEEK_DAYS = [
+  { label: 'S', value: 0 },
+  { label: 'M', value: 1 },
+  { label: 'T', value: 2 },
+  { label: 'W', value: 3 },
+  { label: 'T', value: 4 },
+  { label: 'F', value: 5 },
+  { label: 'S', value: 6 },
+];
+
 interface AddHabitProps {
-  onAdd: (name: string, frequency: Frequency) => void;
+  onAdd: (name: string, frequency: Frequency, weeklyTargetDays?: number[]) => void;
 }
 
 export function AddHabit({ onAdd }: AddHabitProps) {
@@ -23,19 +33,33 @@ export function AddHabit({ onAdd }: AddHabitProps) {
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState('');
   const [frequency, setFrequency] = useState<Frequency>('DAILY');
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+
+  function toggleDay(day: number) {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+    );
+  }
+
+  const canSubmit = name.trim().length > 0 && (frequency === 'DAILY' || selectedDays.length > 0);
 
   function submit() {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    onAdd(trimmed, frequency);
+    if (!canSubmit) return;
+    onAdd(
+      name.trim(),
+      frequency,
+      frequency === 'WEEKLY' ? selectedDays : undefined,
+    );
     setName('');
     setFrequency('DAILY');
+    setSelectedDays([]);
     inputRef.current?.focus();
   }
 
   function dismiss() {
     setName('');
     setFrequency('DAILY');
+    setSelectedDays([]);
     setExpanded(false);
     Keyboard.dismiss();
   }
@@ -64,10 +88,10 @@ export function AddHabit({ onAdd }: AddHabitProps) {
         {expanded && (
           <Pressable
             onPress={submit}
-            disabled={!name.trim()}
+            disabled={!canSubmit}
             style={[
               styles.addBtn,
-              { backgroundColor: theme.accent, opacity: name.trim() ? 1 : 0.35 },
+              { backgroundColor: theme.accent, opacity: canSubmit ? 1 : 0.35 },
             ]}>
             <Text style={[styles.addBtnLabel, { color: theme.accentForeground }]}>Add</Text>
           </Pressable>
@@ -79,7 +103,10 @@ export function AddHabit({ onAdd }: AddHabitProps) {
             {FREQUENCIES.map((f) => (
               <Pressable
                 key={f}
-                onPress={() => setFrequency(f)}
+                onPress={() => {
+                  setFrequency(f);
+                  if (f === 'DAILY') setSelectedDays([]);
+                }}
                 style={[
                   styles.chip,
                   { borderColor: theme.accent },
@@ -98,6 +125,36 @@ export function AddHabit({ onAdd }: AddHabitProps) {
           <Pressable onPress={dismiss}>
             <Text style={[styles.cancelLabel, { color: theme.textSecondary }]}>Cancel</Text>
           </Pressable>
+        </View>
+      )}
+      {expanded && frequency === 'WEEKLY' && (
+        <View style={[styles.daysRow, { borderTopColor: theme.border }]}>
+          <Text style={[styles.daysLabel, { color: theme.textSecondary }]}>Target days</Text>
+          <View style={styles.dayChips}>
+            {WEEK_DAYS.map((day, idx) => {
+              const active = selectedDays.includes(day.value);
+              return (
+                <Pressable
+                  key={idx}
+                  onPress={() => toggleDay(day.value)}
+                  style={[
+                    styles.dayChip,
+                    {
+                      borderColor: active ? theme.accent : theme.border,
+                      backgroundColor: active ? theme.accent : 'transparent',
+                    },
+                  ]}>
+                  <Text
+                    style={[
+                      styles.dayChipLabel,
+                      { color: active ? theme.accentForeground : theme.textSecondary },
+                    ]}>
+                    {day.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       )}
     </View>
@@ -144,4 +201,32 @@ const styles = StyleSheet.create({
   },
   chipLabel: { fontSize: 12, fontWeight: '600' },
   cancelLabel: { fontSize: 13, fontWeight: '500' },
+  daysRow: {
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.two + 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.one + 2,
+  },
+  daysLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    paddingTop: Spacing.two,
+  },
+  dayChips: {
+    flexDirection: 'row',
+    gap: Spacing.one + 2,
+  },
+  dayChip: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayChipLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

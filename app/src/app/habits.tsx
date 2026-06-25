@@ -8,7 +8,7 @@ import { HabitItem } from '@/components/habit-item';
 import { AddHabit } from '@/components/habit-add';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, BottomTabInset } from '@/constants/theme';
-import { useHabits, useCreateHabit, useCompleteHabit, useUncompleteHabit } from '@/lib/habits';
+import { useHabits, useCreateHabit, useCompleteHabit, useUncompleteHabit, useDeleteHabit } from '@/lib/habits';
 import type { Frequency } from '@/types/habit';
 
 export default function HabitsScreen() {
@@ -17,11 +17,12 @@ export default function HabitsScreen() {
   const createHabit = useCreateHabit();
   const completeHabit = useCompleteHabit();
   const uncompleteHabit = useUncompleteHabit();
+  const deleteHabit = useDeleteHabit();
 
   const doneCount = habits.filter((h) => h.completedToday).length;
 
-  function handleAdd(name: string, frequency: Frequency) {
-    createHabit.mutate({ name, frequency });
+  function handleAdd(name: string, frequency: Frequency, weeklyTargetDays?: number[]) {
+    createHabit.mutate({ name, frequency, weeklyTargetDays });
   }
 
   function handleToggle(id: string, completedToday: boolean) {
@@ -30,6 +31,10 @@ export default function HabitsScreen() {
     } else {
       completeHabit.mutate(id);
     }
+  }
+
+  function handleDelete(id: string) {
+    deleteHabit.mutate(id);
   }
 
   return (
@@ -69,7 +74,7 @@ export default function HabitsScreen() {
               </View>
             }
             renderItem={({ item }) => (
-              <HabitItem habit={item} onToggle={handleToggle} />
+              <HabitItem habit={item} onToggle={handleToggle} onDelete={handleDelete} />
             )}
           />
         )}

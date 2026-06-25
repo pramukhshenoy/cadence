@@ -50,15 +50,20 @@ function buildDueDateSections(tasks: Task[]): SectionListData<Task>[] {
   const tomorrowTasks: Task[] = [];
   const upcoming: Task[] = [];
   const noDate: Task[] = [];
+  const completed: Task[] = [];
 
   for (const task of tasks) {
+    if (task.status === 'DONE') {
+      completed.push(task);
+      continue;
+    }
     if (!task.dueDate) {
       noDate.push(task);
       continue;
     }
     const d = new Date(task.dueDate);
     d.setHours(0, 0, 0, 0);
-    if (d < today && task.status !== 'DONE') {
+    if (d < today) {
       overdue.push(task);
     } else if (d.getTime() === today.getTime()) {
       todayTasks.push(task);
@@ -75,6 +80,7 @@ function buildDueDateSections(tasks: Task[]): SectionListData<Task>[] {
     { title: 'Tomorrow', data: tomorrowTasks },
     { title: 'Upcoming', data: upcoming },
     { title: 'No Due Date', data: noDate },
+    { title: 'Completed', data: completed },
   ].filter((s) => s.data.length > 0);
 }
 
@@ -90,7 +96,8 @@ export default function TasksScreen() {
   const deleteTask = useDeleteTask();
 
   const filtered = tasks.filter((t) => {
-    if (statusFilter && t.status !== statusFilter) return false;
+    if (statusFilter === null && t.status === 'DONE') return false;
+    if (statusFilter !== null && t.status !== statusFilter) return false;
     if (priorityFilter && t.priority !== priorityFilter) return false;
     return true;
   });
@@ -100,8 +107,8 @@ export default function TasksScreen() {
       ? buildPrioritySections(filtered)
       : buildDueDateSections(filtered);
 
-  function handleAdd(title: string, priority: Priority) {
-    createTask.mutate({ title, priority });
+  function handleAdd(title: string, priority: Priority, dueDate: string | null) {
+    createTask.mutate({ title, priority, dueDate });
   }
 
   function handleUpdate(id: string, payload: UpdateTaskPayload) {

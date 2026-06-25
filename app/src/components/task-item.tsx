@@ -1,9 +1,26 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput, StyleSheet, ScrollView } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, CardShadow } from '@/constants/theme';
 import type { Task, Priority, UpdateTaskPayload } from '@/types/task';
+
+function offsetDate(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function formatDateShort(iso: string): string {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+const DATE_PRESETS = [
+  { label: 'Today', iso: () => offsetDate(0) },
+  { label: 'Tomorrow', iso: () => offsetDate(1) },
+  { label: 'Next week', iso: () => offsetDate(7) },
+];
 
 const PRIORITY_COLOR: Record<Priority, string> = {
   HIGH: '#EF4444',
@@ -25,10 +42,12 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editPriority, setEditPriority] = useState<Priority>(task.priority);
+  const [editDueDate, setEditDueDate] = useState<string | null>(task.dueDate ?? null);
 
   function openEdit() {
     setEditTitle(task.title);
     setEditPriority(task.priority);
+    setEditDueDate(task.dueDate ?? null);
     setEditing(true);
   }
 
@@ -45,8 +64,13 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
     const updates: UpdateTaskPayload = {};
     if (trimmed !== task.title) updates.title = trimmed;
     if (editPriority !== task.priority) updates.priority = editPriority;
+    if (editDueDate !== (task.dueDate ?? null)) updates.dueDate = editDueDate;
     if (Object.keys(updates).length > 0) onUpdate(task.id, updates);
     setEditing(false);
+  }
+
+  function togglePreset(iso: string) {
+    setEditDueDate((prev) => (prev === iso ? null : iso));
   }
 
   const renderCompleteAction = () => (
@@ -136,6 +160,34 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
                 </Pressable>
               ))}
             </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateScrollRow} contentContainerStyle={styles.dateScrollContent}>
+              <Text style={[styles.dateEditLabel, { color: theme.textSecondary }]}>Due</Text>
+              {editDueDate !== null && (
+                <Pressable
+                  onPress={() => setEditDueDate(null)}
+                  style={[styles.priorityChip, { borderColor: theme.border }]}>
+                  <Text style={[styles.priorityChipLabel, { color: theme.textSecondary }]}>✕ Clear</Text>
+                </Pressable>
+              )}
+              {DATE_PRESETS.map((preset) => {
+                const iso = preset.iso();
+                const active = editDueDate === iso;
+                return (
+                  <Pressable
+                    key={preset.label}
+                    onPress={() => togglePreset(iso)}
+                    style={[
+                      styles.priorityChip,
+                      { borderColor: theme.border },
+                      active && { backgroundColor: theme.accent, borderColor: theme.accent },
+                    ]}>
+                    <Text style={[styles.priorityChipLabel, { color: active ? theme.accentForeground : theme.textSecondary }]}>
+                      {active ? formatDateShort(iso) : preset.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
             <View style={styles.editButtons}>
               <Pressable
                 onPress={saveEdit}
@@ -291,6 +343,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     paddingVertical: Spacing.one,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  dateScrollRow: {
+    marginTop: 2,
+  },
+  dateScrollContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  dateEditLabel: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   priorityRow: {
     flexDirection: 'row',

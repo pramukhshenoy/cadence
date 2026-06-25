@@ -137,6 +137,59 @@ All endpoints tested with `Authorization: Bearer change-me-before-use` and `X-Ti
 **Fix applied:** Removed `@expo/vector-icons` dependency entirely from `app-tabs.tsx`. Replaced with self-contained inline icon components using React Native `View`/`Text` with Unicode characters — no external font files needed.  
 **Additional note:** Expo Go also caches the error state. After fixing the code, `adb shell pm clear host.exp.exponent` is required to force Expo Go to fetch a fresh bundle.
 
+### ISSUE-011 — Done tasks visible in "Active" view; no clear way to separate them ✅ FIXED
+**Severity:** Medium (UX confusion)
+**Screen:** Tasks
+**Steps to reproduce:**
+1. Mark a task as done (swipe left → "Done")
+2. Task remains visible in the default list with a strikethrough, interleaved with active tasks
+
+**Observed:** "All" filter chip showed every task regardless of status, including completed ones with strikethrough styling. Users reported confusion: "Done tasks are not shown in the All filter" (couldn't distinguish them) and "Deleted tasks are striked-through but still shown" (expected completion to hide the item).
+**Expected:** Active view shows only in-flight tasks; completed tasks are accessible via a dedicated filter.
+**Fix applied:**
+- Renamed "All" status chip to **"Active"** (`value: null`) — now excludes `DONE` tasks from the default view.
+- Filter logic in [tasks.tsx](../../app/src/app/tasks.tsx): `statusFilter === null` explicitly excludes `status === 'DONE'`.
+- "Done" chip still works as before to show only completed tasks.
+- Fixed `buildDueDateSections` — DONE tasks previously fell into the "Upcoming" bucket; they now land in a dedicated "Completed" section.
+
+---
+
+### ISSUE-012 — No way to set a due date when creating or editing a task ✅ FIXED
+**Severity:** Medium (missing core feature)
+**Screen:** Tasks
+**Details:** `AddTask` only captured title and priority. The edit form in `TaskItem` also had no date controls. `dueDate` was never populated on creation, so the "Overdue" / "Today" / "Tomorrow" / "Upcoming" groupings in the due-date view were always empty.
+**Fix applied:**
+- [task-add.tsx](../../app/src/components/task-add.tsx): Expanded form now shows a **Due** row with **Today / Tomorrow / Next week** quick-select chips when the input is focused. Tapping an active chip deselects it (no date). Selected date is shown as a short label (e.g. "Jun 26").
+- [task-item.tsx](../../app/src/components/task-item.tsx): Edit mode has the same quick-select row plus a **✕ Clear** chip when a date is already set. Date changes are saved alongside title/priority edits.
+- `handleAdd` in [tasks.tsx](../../app/src/app/tasks.tsx) updated to forward `dueDate` to `createTask.mutate`.
+
+---
+
+### ISSUE-013 — Adding a WEEKLY habit always fails with 400 ✅ FIXED
+**Severity:** High (feature entirely broken)
+**Screen:** Habits
+**Steps to reproduce:**
+1. Tap the habit input field
+2. Select "Weekly" frequency chip
+3. Tap Add
+
+**Observed:** Request returns `400 Bad Request: weeklyTargetDays must be a non-empty array of day integers (0=Sun) for WEEKLY habits`. The server has enforced this since the API was written; the frontend never sent the field.
+**Fix applied:**
+- [habit-add.tsx](../../app/src/components/habit-add.tsx): When "Weekly" is selected, a **Target days** row appears showing S M T W T F S circle chips. At least one day must be selected before the Add button enables.
+- [lib/habits.ts](../../app/src/lib/habits.ts): `useCreateHabit` payload type updated to accept optional `weeklyTargetDays: number[]`.
+- [habits.tsx](../../app/src/app/habits.tsx): `handleAdd` forwards `weeklyTargetDays` to the mutation. Daily habits pass `undefined` (field omitted from request body).
+
+---
+
+### ISSUE-014 — No way to delete a habit ✅ FIXED
+**Severity:** Medium (missing feature)
+**Screen:** Habits
+**Details:** `HabitItem` was a plain `Pressable` with only a toggle action. There was no swipe, long-press, or button to remove a habit. `DELETE /api/habits/:id` existed on the server but was unreachable from the UI.
+**Fix applied:**
+- [habit-item.tsx](../../app/src/components/habit-item.tsx): Wrapped with `ReanimatedSwipeable` (same library used by `TaskItem`). Swipe **left → red "Delete" action** calls `onDelete(habit.id)`.
+- [lib/habits.ts](../../app/src/lib/habits.ts): Added `useDeleteHabit` mutation (`DELETE /api/habits/:id`, invalidates habits query on success).
+- [habits.tsx](../../app/src/app/habits.tsx): `handleDelete` wired up and passed to each `HabitItem`.
+
 ---
 
 ## User Feedback
