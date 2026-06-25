@@ -114,9 +114,20 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       now,
     });
 
+    // include deviceCalendarEventId so the client can delete without a second round-trip
+    const blocksToDelete = morningBlocks.map((b) => ({
+      id: b.id,
+      deviceCalendarEventId: b.deviceCalendarEventId,
+    }));
+
     res.status(201).json({
       sleepRecord,
-      reschedule: { performed: true, ...reschedule },
+      reschedule: {
+        performed: true,
+        blocksToDelete,
+        newBlocks: reschedule.newBlocks,
+        droppedCount: reschedule.droppedCount,
+      },
     });
   } catch (err) {
     next(err);

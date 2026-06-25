@@ -15,6 +15,7 @@ import { queryClient } from '@/lib/query-client';
 import { getCalendarPermissionStatus, requestCalendarPermissions } from '@/lib/calendar';
 import { useCalendarSync } from '@/hooks/use-calendar-sync';
 import { useSleepSync } from '@/hooks/use-sleep-sync';
+import { useSleepReschedule } from '@/hooks/use-sleep-reschedule';
 
 function CalendarSyncTrigger() {
   useCalendarSync();
@@ -23,6 +24,11 @@ function CalendarSyncTrigger() {
 
 function SleepSyncTrigger() {
   useSleepSync();
+  return null;
+}
+
+function SleepRescheduleTrigger() {
+  useSleepReschedule();
   return null;
 }
 
@@ -48,6 +54,7 @@ export default function TabLayout() {
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
           <CalendarSyncTrigger />
           <SleepSyncTrigger />
+          <SleepRescheduleTrigger />
           <StatusBar style="auto" />
           <AnimatedSplashOverlay />
           <AppTabs />

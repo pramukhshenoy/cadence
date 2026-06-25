@@ -150,7 +150,10 @@ describe('POST /api/sleep', () => {
       .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
     expect(res.status).toBe(201);
     expect(res.body.reschedule.performed).toBe(true);
-    expect(res.body.reschedule.blocksToDelete).toContain('block-morning-1');
+    const deleteIds = res.body.reschedule.blocksToDelete.map((b: { id: string }) => b.id);
+    expect(deleteIds).toContain('block-morning-1');
+    const deleteCalIds = res.body.reschedule.blocksToDelete.map((b: { deviceCalendarEventId: string }) => b.deviceCalendarEventId);
+    expect(deleteCalIds).toContain('cal-1');
     expect(res.body.reschedule.newBlocks.length).toBeGreaterThan(0);
   });
 
@@ -173,7 +176,8 @@ describe('POST /api/sleep', () => {
       .set(HEADERS)
       .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
     expect(res.status).toBe(201);
-    expect(res.body.reschedule.blocksToDelete).not.toContain('block-afternoon-1');
+    const deleteIds2 = res.body.reschedule.blocksToDelete.map((b: { id: string }) => b.id);
+    expect(deleteIds2).not.toContain('block-afternoon-1');
   });
 
   it('accepts null for deepSleepHours and remSleepHours', async () => {
