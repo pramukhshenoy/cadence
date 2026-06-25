@@ -2,7 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api-client';
 
 export type ModelOption = { id: string; label: string };
-export type AppSettings = { preferredModel: string; targetCalendarId: string | null };
+export type AppSettings = {
+  preferredModel: string;
+  targetCalendarId: string | null;
+  sleepThresholdHours: number;
+  goodThresholdHours: number;
+  morningCutoffHour: number;
+};
 
 export const MODELS_QUERY_KEY = ['chat-models'] as const;
 export const SETTINGS_QUERY_KEY = ['app-settings'] as const;
@@ -53,6 +59,24 @@ export function useUpdateTargetCalendar() {
         body: JSON.stringify({ targetCalendarId }),
       });
       if (!res.ok) throw new Error('Failed to save calendar selection');
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY }),
+  });
+}
+
+export function useUpdateSleepSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      sleepThresholdHours?: number;
+      goodThresholdHours?: number;
+      morningCutoffHour?: number;
+    }): Promise<void> => {
+      const res = await apiFetch('/api/settings', {
+        method: 'PATCH',
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error('Failed to save sleep settings');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY }),
   });

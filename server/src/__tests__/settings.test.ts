@@ -50,11 +50,14 @@ beforeEach(() => {
 // ─── GET /api/settings ────────────────────────────────────────────────────────
 
 describe('GET /api/settings', () => {
-  it('returns preferredModel and targetCalendarId from settings', async () => {
+  it('returns all settings fields', async () => {
     const res = await request(app).get('/api/settings').set(HEADERS);
     expect(res.status).toBe(200);
     expect(res.body.preferredModel).toBe('claude-sonnet-4-6');
     expect(res.body.targetCalendarId).toBeNull();
+    expect(res.body.sleepThresholdHours).toBe(6.5);
+    expect(res.body.goodThresholdHours).toBe(7.0);
+    expect(res.body.morningCutoffHour).toBe(10);
   });
 
   it('returns targetCalendarId when set', async () => {
@@ -180,6 +183,91 @@ describe('PATCH /api/settings', () => {
       .set(HEADERS)
       .send({ targetCalendarId: 42 });
     expect(res.status).toBe(400);
+  });
+
+  it('updates sleepThresholdHours', async () => {
+    (prisma.settings.upsert as jest.Mock).mockResolvedValue({
+      ...mockSettings,
+      sleepThresholdHours: 6.0,
+    });
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ sleepThresholdHours: 6.0 });
+    expect(res.status).toBe(200);
+    expect(res.body.sleepThresholdHours).toBe(6.0);
+    expect(prisma.settings.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { sleepThresholdHours: 6.0 } }),
+    );
+  });
+
+  it('updates goodThresholdHours', async () => {
+    (prisma.settings.upsert as jest.Mock).mockResolvedValue({
+      ...mockSettings,
+      goodThresholdHours: 8.0,
+    });
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ goodThresholdHours: 8.0 });
+    expect(res.status).toBe(200);
+    expect(res.body.goodThresholdHours).toBe(8.0);
+  });
+
+  it('updates morningCutoffHour', async () => {
+    (prisma.settings.upsert as jest.Mock).mockResolvedValue({
+      ...mockSettings,
+      morningCutoffHour: 9,
+    });
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ morningCutoffHour: 9 });
+    expect(res.status).toBe(200);
+    expect(res.body.morningCutoffHour).toBe(9);
+  });
+
+  it('returns 400 when sleepThresholdHours is not a positive number', async () => {
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ sleepThresholdHours: -1 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when morningCutoffHour is out of range', async () => {
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ morningCutoffHour: 25 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when morningCutoffHour is not an integer', async () => {
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ morningCutoffHour: 9.5 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when sleepThresholdHours >= goodThresholdHours in same request', async () => {
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ sleepThresholdHours: 8.0, goodThresholdHours: 5.0 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/sleepThresholdHours must be less than goodThresholdHours/);
+  });
+
+  it('returns 400 when sleepThresholdHours alone would invert existing thresholds', async () => {
+    // mockSettings has goodThresholdHours: 7.0; sending sleepThresholdHours: 8.0 inverts them
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ sleepThresholdHours: 8.0 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/sleepThresholdHours must be less than goodThresholdHours/);
   });
 
   it('returns 401 without auth header', async () => {

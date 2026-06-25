@@ -11,6 +11,9 @@ router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     res.json({
       preferredModel: settings.preferredModel,
       targetCalendarId: settings.targetCalendarId,
+      sleepThresholdHours: settings.sleepThresholdHours,
+      goodThresholdHours: settings.goodThresholdHours,
+      morningCutoffHour: settings.morningCutoffHour,
     });
   } catch (err) {
     next(err);
@@ -20,14 +23,26 @@ router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
 router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>;
-    const { preferredModel, targetCalendarId } = body;
+    const { preferredModel, targetCalendarId, sleepThresholdHours, goodThresholdHours, morningCutoffHour } = body;
 
-    if (preferredModel === undefined && targetCalendarId === undefined) {
-      res.status(400).json({ error: 'At least one of preferredModel or targetCalendarId is required' });
+    if (
+      preferredModel === undefined &&
+      targetCalendarId === undefined &&
+      sleepThresholdHours === undefined &&
+      goodThresholdHours === undefined &&
+      morningCutoffHour === undefined
+    ) {
+      res.status(400).json({ error: 'At least one setting field is required' });
       return;
     }
 
-    const update: { preferredModel?: string; targetCalendarId?: string | null } = {};
+    const update: {
+      preferredModel?: string;
+      targetCalendarId?: string | null;
+      sleepThresholdHours?: number;
+      goodThresholdHours?: number;
+      morningCutoffHour?: number;
+    } = {};
 
     if (preferredModel !== undefined) {
       if (typeof preferredModel !== 'string' || !preferredModel.trim()) {
@@ -50,6 +65,48 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
       update.targetCalendarId = targetCalendarId as string | null;
     }
 
+    if (sleepThresholdHours !== undefined) {
+      if (typeof sleepThresholdHours !== 'number' || !Number.isFinite(sleepThresholdHours) || sleepThresholdHours <= 0) {
+        res.status(400).json({ error: 'sleepThresholdHours must be a positive number' });
+        return;
+      }
+      update.sleepThresholdHours = sleepThresholdHours;
+    }
+
+    if (goodThresholdHours !== undefined) {
+      if (typeof goodThresholdHours !== 'number' || !Number.isFinite(goodThresholdHours) || goodThresholdHours <= 0) {
+        res.status(400).json({ error: 'goodThresholdHours must be a positive number' });
+        return;
+      }
+      update.goodThresholdHours = goodThresholdHours;
+    }
+
+    // Cross-field: sleepThresholdHours must be strictly less than goodThresholdHours.
+    // When only one is in the request, fetch the persisted value for the other.
+    if (update.sleepThresholdHours !== undefined || update.goodThresholdHours !== undefined) {
+      const needCurrentSleep = update.sleepThresholdHours === undefined;
+      const needCurrentGood = update.goodThresholdHours === undefined;
+      let effectiveSleep = update.sleepThresholdHours;
+      let effectiveGood = update.goodThresholdHours;
+      if (needCurrentSleep || needCurrentGood) {
+        const current = await getSettings(prisma);
+        if (needCurrentSleep) effectiveSleep = current.sleepThresholdHours;
+        if (needCurrentGood) effectiveGood = current.goodThresholdHours;
+      }
+      if ((effectiveSleep as number) >= (effectiveGood as number)) {
+        res.status(400).json({ error: 'sleepThresholdHours must be less than goodThresholdHours' });
+        return;
+      }
+    }
+
+    if (morningCutoffHour !== undefined) {
+      if (typeof morningCutoffHour !== 'number' || !Number.isInteger(morningCutoffHour) || morningCutoffHour < 0 || morningCutoffHour > 23) {
+        res.status(400).json({ error: 'morningCutoffHour must be an integer between 0 and 23' });
+        return;
+      }
+      update.morningCutoffHour = morningCutoffHour;
+    }
+
     const updated = await prisma.settings.upsert({
       where: { id: 'singleton' },
       update,
@@ -59,6 +116,9 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
     res.json({
       preferredModel: updated.preferredModel,
       targetCalendarId: updated.targetCalendarId,
+      sleepThresholdHours: updated.sleepThresholdHours,
+      goodThresholdHours: updated.goodThresholdHours,
+      morningCutoffHour: updated.morningCutoffHour,
     });
   } catch (err) {
     next(err);

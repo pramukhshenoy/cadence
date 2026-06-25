@@ -14,9 +14,15 @@ import AppTabs from '@/components/app-tabs';
 import { queryClient } from '@/lib/query-client';
 import { getCalendarPermissionStatus, requestCalendarPermissions } from '@/lib/calendar';
 import { useCalendarSync } from '@/hooks/use-calendar-sync';
+import { useSleepSync } from '@/hooks/use-sleep-sync';
 
 function CalendarSyncTrigger() {
   useCalendarSync();
+  return null;
+}
+
+function SleepSyncTrigger() {
+  useSleepSync();
   return null;
 }
 
@@ -41,6 +47,7 @@ export default function TabLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
           <CalendarSyncTrigger />
+          <SleepSyncTrigger />
           <StatusBar style="auto" />
           <AnimatedSplashOverlay />
           <AppTabs />

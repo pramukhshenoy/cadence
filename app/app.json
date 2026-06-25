@@ -18,7 +18,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"]
+      "permissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.health.READ_SLEEP"
+      ]
     },
     "web": {
       "output": "static",
@@ -26,6 +30,7 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-health-connect",
       [
         "expo-calendar",
         {
