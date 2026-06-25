@@ -125,13 +125,13 @@ Git push follows each commit if a remote is configured.
 - [x] Jest tests for algorithm (overlap cases, weekend skipping, under-capacity)
 - [x] `git commit`: `phase-4b: focus block scheduling algorithm`
 
-### 4c — Calendar Sync Flow (Mobile)
-- [ ] On app open: query SQLite for known ACTIVE future block IDs → delete from calendar → mark DELETED
-- [ ] Read upcoming week's events from selected source calendars
-- [ ] POST events + timezone to `/api/calendar/sync`
-- [ ] Write returned focus blocks to target calendar; store `calendarMarker` in event notes
-- [ ] POST `deviceCalendarEventId` + `calendarMarker` pairs to backend to persist FocusBlock records
-- [ ] `git commit`: `phase-4c: calendar sync flow`
+### 4c — Calendar Sync Flow (Mobile) ✅
+- [x] On app open: query SQLite for known ACTIVE future block IDs → delete from calendar → mark DELETED
+- [x] Read upcoming week's events from selected source calendars
+- [x] POST events + timezone to `/api/calendar/sync`
+- [x] Write returned focus blocks to target calendar; store `calendarMarker` in event notes
+- [x] POST `deviceCalendarEventId` + `calendarMarker` pairs to backend to persist FocusBlock records
+- [x] `git commit`: `phase-4c: calendar sync flow`
 
 ### 4d — Dashboard Focus Widget (Mobile)
 - [ ] Focus block widget: scheduled hours vs. elapsed this week
