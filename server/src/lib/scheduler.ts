@@ -31,16 +31,26 @@ export interface SchedulerResult {
   shortfallHours: number;
 }
 
-const MIN_BLOCK_MINUTES = 30;
-const BLOCK_DURATION_MINUTES = 60;
+export const MIN_BLOCK_MINUTES = 30;
+export const BLOCK_DURATION_MINUTES = 60;
 
-function utcToLocalDateStr(date: Date, tz: string): string {
+export function utcToLocalDateStr(date: Date, tz: string): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: tz,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   }).format(date);
+}
+
+export function utcToLocalHour(date: Date, tz: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hour: 'numeric',
+    hour12: false,
+  }).formatToParts(date);
+  const h = parts.find((p) => p.type === 'hour')?.value ?? '0';
+  return parseInt(h) % 24;
 }
 
 // Convert a local date (YYYY-MM-DD) + hour + minute to UTC.

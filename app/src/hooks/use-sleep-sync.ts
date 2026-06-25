@@ -8,8 +8,7 @@ import type { SleepQuality, SleepSummary } from '@/types/sleep';
 
 export const SLEEP_SUMMARY_KEY = ['sleep-summary'] as const;
 
-// Internal cache for raw sensor data — only written on a successful HC read,
-// so it is safe to use as an "already read today" guard without false positives.
+// only written on successful HC read — safe "already read today" guard
 const RAW_SLEEP_KEY = ['sleep-raw'] as const;
 
 function deriveSleepQuality(
@@ -28,9 +27,7 @@ export function useSleepSync() {
   const sleepThresholdHours = settings?.sleepThresholdHours;
   const goodThresholdHours = settings?.goodThresholdHours;
 
-  // Refs let Effect 1 read the latest threshold values without adding them to
-  // its dependency array (which would re-trigger the expensive HC read on every
-  // settings change).
+  // refs let Effect 1 read latest thresholds without re-triggering on settings change
   const thresholdRef = useRef(sleepThresholdHours);
   const goodRef = useRef(goodThresholdHours);
   useEffect(() => {
@@ -38,9 +35,7 @@ export function useSleepSync() {
     goodRef.current = goodThresholdHours;
   }, [sleepThresholdHours, goodThresholdHours]);
 
-  // Effect 1: Read raw sleep data from Health Connect once per session.
-  // Guards on RAW_SLEEP_KEY, which is only written on a successful read —
-  // errors do NOT write any cache key so future mounts can retry.
+  // Effect 1: reads HC once per session; errors leave cache empty so future mounts can retry
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
@@ -67,8 +62,7 @@ export function useSleepSync() {
         return;
       }
 
-      // Compute quality immediately using the latest threshold values from refs.
-      // Using refs (not state) avoids re-running this effect when thresholds change.
+      // refs hold latest thresholds without re-running this effect on settings change
       const threshold = thresholdRef.current ?? 6.5;
       const good = goodRef.current ?? 7.0;
       const quality = deriveSleepQuality(raw.durationHours, threshold, good);
@@ -85,8 +79,7 @@ export function useSleepSync() {
       queryClient.setQueryData(SLEEP_SUMMARY_KEY, summary);
     }
 
-    // Do NOT write SLEEP_SUMMARY_KEY on error — keeps the cache clear so
-    // the next mount can retry rather than being permanently locked out.
+    // on error: don't write cache — next mount can retry
     run().catch((err: unknown) => {
       if (!cancelled) console.error('[SleepSync]', err);
     });
@@ -96,9 +89,7 @@ export function useSleepSync() {
     };
   }, [queryClient]);
 
-  // Effect 2: Re-derive quality label when thresholds change.
-  // Never reads Health Connect — only touches the in-memory cache.
-  // Preserves rescheduledCount written by the reschedule flow in phases 5b/5c.
+  // Effect 2: re-derives quality on threshold change without re-reading HC; preserves rescheduledCount
   useEffect(() => {
     if (sleepThresholdHours === undefined || goodThresholdHours === undefined) return;
 
@@ -121,9 +112,7 @@ export function useSleepSync() {
   }, [sleepThresholdHours, goodThresholdHours, queryClient]);
 }
 
-// Reactive hook — returns undefined before sync, null for no data, SleepSummary otherwise.
-// skipToken ensures TanStack Query never executes a queryFn and never primes the cache,
-// while still subscribing to setQueryData updates so callers re-render when data arrives.
+// skipToken subscribes to setQueryData updates without executing a queryFn or priming the cache
 export function useSleepSummary(): SleepSummary | null | undefined {
   const { data } = useQuery<SleepSummary | null>({
     queryKey: SLEEP_SUMMARY_KEY,
