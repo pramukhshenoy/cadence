@@ -10,6 +10,10 @@ jest.mock('../lib/prisma', () => ({
       createMany: jest.fn(),
       updateMany: jest.fn(),
     },
+    settings: {
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
+    },
   },
 }));
 
@@ -204,5 +208,127 @@ describe('PATCH /api/focus-blocks/batch-delete', () => {
       .send({ ids: [] });
     expect(res.status).toBe(200);
     expect(res.body.count).toBe(0);
+  });
+});
+
+// ─── GET /api/focus-blocks/week-summary ──────────────────────────────────────
+
+// Pinned to Thursday 2026-06-25 10:00 UTC — ISO week is Mon 2026-06-22 → Sun 2026-06-28
+const FIXED_NOW = new Date('2026-06-25T10:00:00.000Z');
+
+const defaultSettings = {
+  id: 'singleton',
+  focusHoursPerWeek: 10,
+  workdayStartHour: 9,
+  workdayEndHour: 18,
+  includeWeekends: false,
+  preferredModel: 'claude-sonnet-4-6',
+  sleepThresholdHours: 6.5,
+  goodThresholdHours: 7.0,
+  morningCutoffHour: 10,
+  targetCalendarId: null,
+  timezone: 'UTC',
+  updatedAt: new Date(),
+};
+
+describe('GET /api/focus-blocks/week-summary', () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ now: FIXED_NOW });
+    (prisma.settings.findUnique as jest.Mock).mockResolvedValue(defaultSettings);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('returns 401 without auth', async () => {
+    const res = await request(app).get('/api/focus-blocks/week-summary');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns zero hours when no blocks exist', async () => {
+    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([]);
+    const res = await request(app)
+      .get('/api/focus-blocks/week-summary')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', 'UTC');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      scheduledHours: 0,
+      elapsedHours: 0,
+      targetHours: 10,
+      shortfallHours: 10,
+    });
+  });
+
+  it('counts a past block in both scheduled and elapsed', async () => {
+    // Wednesday 09:00–10:00 UTC — fully in the past relative to FIXED_NOW (Thursday 10:00)
+    const pastBlock = {
+      ...mockBlock,
+      startTime: new Date('2026-06-24T09:00:00.000Z'),
+      endTime: new Date('2026-06-24T10:00:00.000Z'),
+    };
+    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([pastBlock]);
+    const res = await request(app)
+      .get('/api/focus-blocks/week-summary')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', 'UTC');
+    expect(res.status).toBe(200);
+    expect(res.body.scheduledHours).toBeCloseTo(1);
+    expect(res.body.elapsedHours).toBeCloseTo(1);
+    expect(res.body.shortfallHours).toBeCloseTo(9);
+  });
+
+  it('counts a future block in scheduled but not elapsed', async () => {
+    // Friday 09:00–10:00 UTC — in the future relative to FIXED_NOW
+    const futureBlock = {
+      ...mockBlock,
+      startTime: new Date('2026-06-26T09:00:00.000Z'),
+      endTime: new Date('2026-06-26T10:00:00.000Z'),
+    };
+    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([futureBlock]);
+    const res = await request(app)
+      .get('/api/focus-blocks/week-summary')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', 'UTC');
+    expect(res.status).toBe(200);
+    expect(res.body.scheduledHours).toBeCloseTo(1);
+    expect(res.body.elapsedHours).toBe(0);
+  });
+
+  it('reports zero shortfall when scheduledHours meets target', async () => {
+    // 10 x 1-hour blocks this week (target is 10h)
+    const blocks = Array.from({ length: 10 }, (_, i) => ({
+      ...mockBlock,
+      id: `block-${i}`,
+      deviceCalendarEventId: `cal-${i}`,
+      calendarMarker: `marker-${i}`,
+      startTime: new Date(`2026-06-26T0${i}:00:00.000Z`),
+      endTime: new Date(`2026-06-26T0${i}:00:00.000Z`).setMinutes(60) as unknown as Date,
+    })).map((b) => ({
+      ...b,
+      endTime: new Date(new Date(b.startTime).getTime() + 3600000),
+    }));
+    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue(blocks);
+    const res = await request(app)
+      .get('/api/focus-blocks/week-summary')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', 'UTC');
+    expect(res.status).toBe(200);
+    expect(res.body.scheduledHours).toBeCloseTo(10);
+    expect(res.body.shortfallHours).toBe(0);
+  });
+
+  it('queries only ACTIVE blocks within the current week', async () => {
+    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([]);
+    await request(app)
+      .get('/api/focus-blocks/week-summary')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', 'UTC');
+    expect(prisma.focusBlock.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'ACTIVE' }),
+      }),
+    );
   });
 });

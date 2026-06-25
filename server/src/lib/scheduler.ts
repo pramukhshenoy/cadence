@@ -66,7 +66,7 @@ export function localTimeToUtc(dateStr: string, hour: number, minute: number, tz
   return new Date(pivot.getTime() - errorMin * 60 * 1000);
 }
 
-function getIsoWeekDates(now: Date, tz: string): string[] {
+export function getIsoWeekDates(now: Date, tz: string): string[] {
   const localDate = utcToLocalDateStr(now, tz);
   const [year, month, day] = localDate.split('-').map(Number);
   const d = new Date(Date.UTC(year, month - 1, day));

@@ -8,6 +8,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { Spacing, BottomTabInset, CardShadow } from '@/constants/theme';
 import { useTasks } from '@/lib/tasks';
 import { useHabits } from '@/lib/habits';
+import { useFocusWeekSummary } from '@/lib/focus-blocks';
+
+function formatHours(h: number): string {
+  return h % 1 === 0 ? `${h}h` : `${h.toFixed(1)}h`;
+}
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -34,6 +39,7 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const { data: tasks = [] } = useTasks();
   const { data: habits = [] } = useHabits();
+  const { data: focusSummary } = useFocusWeekSummary();
 
   const today = todayMidnight();
 
@@ -108,6 +114,34 @@ export default function DashboardScreen() {
                   : `${habitsTotal - habitsDone} remaining`}
               </Text>
             </View>
+
+            {focusSummary !== undefined && (
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                  CardShadow,
+                ]}>
+                <Text style={[styles.cardLabel, { color: theme.textSecondary }]}>
+                  FOCUS THIS WEEK
+                </Text>
+                <Text style={[styles.cardNumber, { color: theme.text }]}>
+                  {formatHours(focusSummary.scheduledHours)}
+                </Text>
+                <Text style={[styles.cardSub, { color: theme.textSecondary }]}>
+                  {`of ${focusSummary.targetHours}h target · ${formatHours(focusSummary.elapsedHours)} elapsed`}
+                </Text>
+                {focusSummary.shortfallHours >= 0.1 ? (
+                  <Text style={styles.shortfallNote}>
+                    {`${formatHours(focusSummary.shortfallHours)} shortfall — not enough slots`}
+                  </Text>
+                ) : focusSummary.scheduledHours > 0 ? (
+                  <Text style={[styles.cardSub, { color: theme.accent }]}>On track</Text>
+                ) : (
+                  <Text style={[styles.cardSub, { color: theme.textSecondary }]}>No blocks scheduled</Text>
+                )}
+              </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -159,5 +193,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: '#EF4444',
+  },
+  shortfallNote: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#F59E0B',
   },
 });

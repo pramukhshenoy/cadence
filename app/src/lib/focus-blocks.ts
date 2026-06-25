@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from './api-client';
 
 export interface FocusBlock {
@@ -28,6 +29,26 @@ export interface SchedulerResult {
   scheduledHours: number;
   requestedHours: number;
   shortfallHours: number;
+}
+
+export interface WeekSummary {
+  scheduledHours: number;
+  elapsedHours: number;
+  targetHours: number;
+  shortfallHours: number;
+}
+
+export const FOCUS_WEEK_SUMMARY_KEY = ['focus-week-summary'] as const;
+
+export function useFocusWeekSummary() {
+  return useQuery<WeekSummary>({
+    queryKey: FOCUS_WEEK_SUMMARY_KEY,
+    queryFn: async () => {
+      const res = await apiFetch('/api/focus-blocks/week-summary');
+      if (!res.ok) throw new Error('Failed to fetch focus week summary');
+      return res.json() as Promise<WeekSummary>;
+    },
+  });
 }
 
 export async function getActiveFutureBlocks(): Promise<FocusBlock[]> {

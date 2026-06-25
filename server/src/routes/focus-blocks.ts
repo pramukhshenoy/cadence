@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
+import { getSettings } from '../lib/settings';
+import { getIsoWeekDates, localTimeToUtc } from '../lib/scheduler';
 
 const router = Router();
 
@@ -9,6 +11,53 @@ type BlockInput = {
   startTime: string;
   endTime: string;
 };
+
+// GET /api/focus-blocks/week-summary — scheduled vs elapsed hours for the current ISO week
+router.get('/week-summary', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tz = req.timezone;
+    const now = new Date();
+
+    const weekDates = getIsoWeekDates(now, tz);
+    const weekStart = localTimeToUtc(weekDates[0], 0, 0, tz);
+
+    // Next Monday = Sunday + 1 day = exclusive week end
+    const [sy, sm, sd] = weekDates[6].split('-').map(Number);
+    const nextMondayStr = new Date(Date.UTC(sy, sm - 1, sd + 1)).toISOString().slice(0, 10);
+    const weekEnd = localTimeToUtc(nextMondayStr, 0, 0, tz);
+
+    const [settings, blocks] = await Promise.all([
+      getSettings(prisma),
+      prisma.focusBlock.findMany({
+        where: {
+          status: 'ACTIVE',
+          startTime: { gte: weekStart, lt: weekEnd },
+        },
+      }),
+    ]);
+    const targetHours = settings.focusHoursPerWeek;
+
+    let scheduledMinutes = 0;
+    let elapsedMinutes = 0;
+
+    for (const block of blocks) {
+      const durationMin = (block.endTime.getTime() - block.startTime.getTime()) / 60000;
+      scheduledMinutes += durationMin;
+      if (block.endTime <= now) {
+        elapsedMinutes += durationMin;
+      }
+    }
+
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const scheduledHours = round2(scheduledMinutes / 60);
+    const elapsedHours = round2(elapsedMinutes / 60);
+    const shortfallHours = round2(Math.max(0, targetHours - scheduledHours));
+
+    res.json({ scheduledHours, elapsedHours, targetHours, shortfallHours });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/focus-blocks — returns ACTIVE focus blocks with startTime >= now
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {

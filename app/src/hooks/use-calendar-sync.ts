@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   deleteCalendarEvent,
@@ -13,11 +14,13 @@ import {
   NewFocusBlock,
   postCalendarSync,
   saveFocusBlocks,
+  FOCUS_WEEK_SUMMARY_KEY,
 } from '@/lib/focus-blocks';
 import { useAppSettings } from '@/lib/settings';
 
 export function useCalendarSync() {
   const { data: settings } = useAppSettings();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!settings?.targetCalendarId) return;
@@ -58,7 +61,11 @@ export function useCalendarSync() {
 
       // Step 3: get optimised focus block schedule from backend
       const { focusBlocks } = await postCalendarSync(events);
-      if (cancelled || focusBlocks.length === 0) return;
+      if (cancelled) return;
+      if (focusBlocks.length === 0) {
+        queryClient.invalidateQueries({ queryKey: FOCUS_WEEK_SUMMARY_KEY });
+        return;
+      }
 
       // Step 4: write focus blocks to device calendar (calendarMarker in notes)
       const writeResults = await Promise.allSettled(
@@ -81,6 +88,7 @@ export function useCalendarSync() {
       if (toSave.length > 0) {
         await saveFocusBlocks(toSave);
       }
+      queryClient.invalidateQueries({ queryKey: FOCUS_WEEK_SUMMARY_KEY });
     }
 
     runSync().catch((err: unknown) => {
@@ -92,5 +100,5 @@ export function useCalendarSync() {
     return () => {
       cancelled = true;
     };
-  }, [settings?.targetCalendarId]);
+  }, [settings?.targetCalendarId, queryClient]);
 }
