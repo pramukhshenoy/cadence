@@ -116,14 +116,14 @@ Git push follows each commit if a remote is configured.
 - [x] Persist `targetCalendarId` in Settings (via backend)
 - [x] `git commit`: `phase-4a: expo-calendar permissions and calendar selection`
 
-### 4b — Scheduling Algorithm (Backend)
-- [ ] `/api/calendar/sync` endpoint: receives events list + timezone
-- [ ] Gap-finding algorithm (≥30 min, within workday hours, skip weekends unless configured)
-- [ ] Conflict detection (no overlap with any existing event)
-- [ ] Under-capacity detection (return shortfall info)
-- [ ] Returns list of focus blocks with `calendarMarker` UUIDs
-- [ ] Jest tests for algorithm (overlap cases, weekend skipping, under-capacity)
-- [ ] `git commit`: `phase-4b: focus block scheduling algorithm`
+### 4b — Scheduling Algorithm (Backend) ✅
+- [x] `/api/calendar/sync` endpoint: receives events list + timezone
+- [x] Gap-finding algorithm (≥30 min, within workday hours, skip weekends unless configured)
+- [x] Conflict detection (no overlap with any existing event)
+- [x] Under-capacity detection (return shortfall info)
+- [x] Returns list of focus blocks with `calendarMarker` UUIDs
+- [x] Jest tests for algorithm (overlap cases, weekend skipping, under-capacity)
+- [x] `git commit`: `phase-4b: focus block scheduling algorithm`
 
 ### 4c — Calendar Sync Flow (Mobile)
 - [ ] On app open: query SQLite for known ACTIVE future block IDs → delete from calendar → mark DELETED
