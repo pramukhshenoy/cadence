@@ -150,13 +150,13 @@ Git push follows each commit if a remote is configured.
 - [x] Handle no-data case gracefully (show "No sleep data", skip reschedule)
 - [x] `git commit`: `phase-5a: health connect sleep read`
 
-### 5b — Sleep Backend
-- [ ] `POST /api/sleep` — persist SleepRecord (upsert on localDate to prevent duplicates)
-- [ ] Reschedule logic: if Poor, find ACTIVE morning blocks (startTime < morningCutoffHour today), compute available afternoon slots
-- [ ] Fallback ordering: later today → tomorrow morning → drop with notice
-- [ ] Returns list of morning blocks to delete + new afternoon blocks to create
-- [ ] Jest tests for reschedule logic (full afternoon, multiple displaced blocks)
-- [ ] `git commit`: `phase-5b: sleep persistence and reschedule logic`
+### 5b — Sleep Backend ✅
+- [x] `POST /api/sleep` — persist SleepRecord (upsert on localDate to prevent duplicates)
+- [x] Reschedule logic: if Poor, find ACTIVE morning blocks (startTime < morningCutoffHour today), compute available afternoon slots
+- [x] Fallback ordering: later today → tomorrow morning → drop with notice
+- [x] Returns list of morning blocks to delete + new afternoon blocks to create
+- [x] Jest tests for reschedule logic (full afternoon, multiple displaced blocks)
+- [x] `git commit`: `phase-5b: sleep persistence and reschedule logic`
 
 ### 5c — Sleep Reschedule Flow (Mobile)
 - [ ] Delete displaced morning blocks from device calendar
