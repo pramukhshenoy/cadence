@@ -158,11 +158,11 @@ Git push follows each commit if a remote is configured.
 - [x] Jest tests for reschedule logic (full afternoon, multiple displaced blocks)
 - [x] `git commit`: `phase-5b: sleep persistence and reschedule logic`
 
-### 5c — Sleep Reschedule Flow (Mobile)
-- [ ] Delete displaced morning blocks from device calendar
-- [ ] Write rescheduled afternoon blocks to calendar
-- [ ] POST new deviceCalendarEventIds to backend
-- [ ] `git commit`: `phase-5c: sleep-driven calendar reschedule flow`
+### 5c — Sleep Reschedule Flow (Mobile) ✅
+- [x] Delete displaced morning blocks from device calendar
+- [x] Write rescheduled afternoon blocks to calendar
+- [x] POST new deviceCalendarEventIds to backend
+- [x] `git commit`: `phase-5c: sleep-driven calendar reschedule flow`
 
 ### 5d — Sleep Dashboard + Settings (Mobile)
 - [ ] Dashboard sleep card: "Last night: 6.1h (Fair) — 1 session rescheduled to 2pm"
