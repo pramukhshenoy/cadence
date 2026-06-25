@@ -9,9 +9,23 @@ import { Spacing, BottomTabInset, CardShadow } from '@/constants/theme';
 import { useTasks } from '@/lib/tasks';
 import { useHabits } from '@/lib/habits';
 import { useFocusWeekSummary } from '@/lib/focus-blocks';
+import { useSleepSummary } from '@/hooks/use-sleep-sync';
+import type { SleepQuality } from '@/types/sleep';
 
 function formatHours(h: number): string {
   return h % 1 === 0 ? `${h}h` : `${h.toFixed(1)}h`;
+}
+
+function qualityColor(quality: SleepQuality, accent: string): string {
+  if (quality === 'POOR') return '#EF4444';
+  if (quality === 'FAIR') return '#F59E0B';
+  return accent;
+}
+
+function qualityLabel(quality: SleepQuality): string {
+  if (quality === 'POOR') return 'Poor';
+  if (quality === 'FAIR') return 'Fair';
+  return 'Good';
 }
 
 function greeting(): string {
@@ -40,6 +54,7 @@ export default function DashboardScreen() {
   const { data: tasks = [] } = useTasks();
   const { data: habits = [] } = useHabits();
   const { data: focusSummary } = useFocusWeekSummary();
+  const sleepSummary = useSleepSummary();
 
   const today = todayMidnight();
 
@@ -139,6 +154,36 @@ export default function DashboardScreen() {
                   <Text style={[styles.cardSub, { color: theme.accent }]}>On track</Text>
                 ) : (
                   <Text style={[styles.cardSub, { color: theme.textSecondary }]}>No blocks scheduled</Text>
+                )}
+              </View>
+            )}
+
+            {sleepSummary !== undefined && (
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                  CardShadow,
+                ]}>
+                <Text style={[styles.cardLabel, { color: theme.textSecondary }]}>
+                  LAST NIGHT
+                </Text>
+                {sleepSummary === null ? (
+                  <Text style={[styles.cardSub, { color: theme.textSecondary }]}>No sleep data</Text>
+                ) : (
+                  <>
+                    <Text style={[styles.cardNumber, { color: qualityColor(sleepSummary.quality, theme.accent) }]}>
+                      {sleepSummary.durationHours.toFixed(1)}h
+                    </Text>
+                    <Text style={[styles.cardSub, { color: qualityColor(sleepSummary.quality, theme.accent) }]}>
+                      {qualityLabel(sleepSummary.quality)}
+                    </Text>
+                    {sleepSummary.rescheduledCount > 0 && (
+                      <Text style={[styles.cardSub, { color: theme.textSecondary }]}>
+                        {`${sleepSummary.rescheduledCount} block${sleepSummary.rescheduledCount === 1 ? '' : 's'} rescheduled to afternoon`}
+                      </Text>
+                    )}
+                  </>
                 )}
               </View>
             )}

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,7 +15,7 @@ import {
   setApiBaseUrl,
   setApiToken,
 } from '@/lib/api-client';
-import { useChatModels, useAppSettings, useUpdatePreferredModel } from '@/lib/settings';
+import { useChatModels, useAppSettings, useUpdatePreferredModel, useUpdateSleepSettings } from '@/lib/settings';
 
 type SaveState = 'idle' | 'saving' | 'saved';
 
@@ -30,7 +30,13 @@ export default function SettingsScreen() {
   const { data: models, isLoading: modelsLoading } = useChatModels();
   const { data: appSettings, isLoading: settingsLoading } = useAppSettings();
   const updateModel = useUpdatePreferredModel();
+  const updateSleepSettings = useUpdateSleepSettings();
   const [selectedModel, setSelectedModel] = useState<string>('');
+
+  const [sleepThreshold, setSleepThreshold] = useState('');
+  const [goodThreshold, setGoodThreshold] = useState('');
+  const [morningCutoff, setMorningCutoff] = useState('');
+  const sleepInitialized = useRef(false);
 
   useEffect(() => {
     getApiBaseUrl()
@@ -50,8 +56,34 @@ export default function SettingsScreen() {
     }
   }, [appSettings?.preferredModel, selectedModel]);
 
+  useEffect(() => {
+    if (appSettings && !sleepInitialized.current) {
+      sleepInitialized.current = true;
+      setSleepThreshold(String(appSettings.sleepThresholdHours));
+      setGoodThreshold(String(appSettings.goodThresholdHours));
+      setMorningCutoff(String(appSettings.morningCutoffHour));
+    }
+  }, [appSettings]);
+
   async function handleSave() {
     if (saveState === 'saving') return;
+    const parsedThreshold = parseFloat(sleepThreshold);
+    const parsedGood = parseFloat(goodThreshold);
+    const parsedCutoff = parseInt(morningCutoff, 10);
+    const hasInvalidSleepField =
+      (sleepThreshold !== '' && isNaN(parsedThreshold)) ||
+      (goodThreshold !== '' && isNaN(parsedGood)) ||
+      (morningCutoff !== '' && isNaN(parsedCutoff));
+    if (hasInvalidSleepField) {
+      Alert.alert('Invalid sleep values', 'Sleep threshold hours must be valid numbers.');
+      return;
+    }
+    const validThreshold = !isNaN(parsedThreshold);
+    const validGood = !isNaN(parsedGood);
+    if (validThreshold && validGood && parsedThreshold >= parsedGood) {
+      Alert.alert('Invalid sleep values', 'Poor sleep threshold must be less than good sleep threshold.');
+      return;
+    }
     setSaveState('saving');
     try {
       await setApiBaseUrl(url.trim() || DEFAULT_API_URL);
@@ -63,6 +95,13 @@ export default function SettingsScreen() {
       }
       if (selectedModel) {
         await updateModel.mutateAsync(selectedModel);
+      }
+      const sleepValues: { sleepThresholdHours?: number; goodThresholdHours?: number; morningCutoffHour?: number } = {};
+      if (validThreshold) sleepValues.sleepThresholdHours = parsedThreshold;
+      if (validGood) sleepValues.goodThresholdHours = parsedGood;
+      if (!isNaN(parsedCutoff)) sleepValues.morningCutoffHour = parsedCutoff;
+      if (Object.keys(sleepValues).length > 0) {
+        await updateSleepSettings.mutateAsync(sleepValues);
       }
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2000);
@@ -161,6 +200,47 @@ export default function SettingsScreen() {
                 </View>
                 <Text style={[styles.chevron, { color: theme.textSecondary }]}>›</Text>
               </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>SLEEP</Text>
+            <View style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }, CardShadow]}>
+              <View style={styles.fieldInCard}>
+                <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>Poor sleep threshold (hours)</Text>
+                <TextInput
+                  style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                  value={sleepThreshold}
+                  onChangeText={setSleepThreshold}
+                  placeholder="6.5"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={[styles.divider, { backgroundColor: theme.border }]} />
+              <View style={styles.fieldInCard}>
+                <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>Good sleep threshold (hours)</Text>
+                <TextInput
+                  style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                  value={goodThreshold}
+                  onChangeText={setGoodThreshold}
+                  placeholder="7.0"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={[styles.divider, { backgroundColor: theme.border }]} />
+              <View style={styles.fieldInCard}>
+                <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>Morning cutoff hour (24h)</Text>
+                <TextInput
+                  style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                  value={morningCutoff}
+                  onChangeText={setMorningCutoff}
+                  placeholder="10"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="numeric"
+                />
+              </View>
             </View>
           </View>
 

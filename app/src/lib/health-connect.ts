@@ -92,6 +92,8 @@ export async function readLastNightSleep(): Promise<AggregateSleepData | null> {
     }
   }
 
+  if (totalMs <= 0) return null;
+
   return {
     localDate,
     durationHours: totalMs / 3_600_000,
