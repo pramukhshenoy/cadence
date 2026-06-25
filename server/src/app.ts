@@ -7,6 +7,7 @@ import habitsRouter from './routes/habits';
 import chatRouter from './routes/chat';
 import settingsRouter from './routes/settings';
 import calendarRouter from './routes/calendar';
+import focusBlocksRouter from './routes/focus-blocks';
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use('/api/habits', habitsRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/calendar', calendarRouter);
+app.use('/api/focus-blocks', focusBlocksRouter);
 app.use(errorHandler);
 
 export default app;

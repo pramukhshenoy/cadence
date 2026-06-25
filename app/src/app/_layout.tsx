@@ -13,6 +13,12 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { queryClient } from '@/lib/query-client';
 import { getCalendarPermissionStatus, requestCalendarPermissions } from '@/lib/calendar';
+import { useCalendarSync } from '@/hooks/use-calendar-sync';
+
+function CalendarSyncTrigger() {
+  useCalendarSync();
+  return null;
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? Appearance.getColorScheme() ?? 'light';
@@ -34,6 +40,7 @@ export default function TabLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <CalendarSyncTrigger />
           <StatusBar style="auto" />
           <AnimatedSplashOverlay />
           <AppTabs />
