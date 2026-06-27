@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal } from '@/lib/goals';
@@ -10,6 +11,12 @@ import { Spacing, BottomTabInset } from '@/constants/theme';
 import type { Goal, UpdateGoalPayload } from '@/types/goal';
 import type { Priority } from '@/types/task';
 
+type ListItem =
+  | { type: 'add' }
+  | { type: 'header'; title: string }
+  | { type: 'goal'; goal: Goal }
+  | { type: 'empty' };
+
 export default function GoalsScreen() {
   const theme = useTheme();
   const { data: goals = [], isLoading, isError } = useGoals();
@@ -17,46 +24,48 @@ export default function GoalsScreen() {
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
 
-  function handleAdd(title: string, priority: Priority, targetDate: string | null) {
-    createGoal.mutate({ title, priority, targetDate });
-  }
+  const handleAdd = useCallback(
+    (title: string, priority: Priority, targetDate: string | null) => {
+      createGoal.mutate({ title, priority, targetDate });
+    },
+    [createGoal],
+  );
 
-  function handleUpdate(id: string, payload: UpdateGoalPayload) {
-    updateGoal.mutate({ id, payload });
-  }
+  const handleUpdate = useCallback(
+    (id: string, payload: UpdateGoalPayload) => {
+      updateGoal.mutate({ id, payload });
+    },
+    [updateGoal],
+  );
 
-  function handleDelete(id: string) {
-    deleteGoal.mutate(id);
-  }
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteGoal.mutate(id);
+    },
+    [deleteGoal],
+  );
 
-  const activeGoals = goals.filter((g) => g.status === 'ACTIVE');
-  const completedGoals = goals.filter((g) => g.status === 'COMPLETED');
-  const abandonedGoals = goals.filter((g) => g.status === 'ABANDONED');
+  const listItems = useMemo((): ListItem[] => {
+    const active = goals.filter((g) => g.status === 'ACTIVE');
+    const completed = goals.filter((g) => g.status === 'COMPLETED');
+    const abandoned = goals.filter((g) => g.status === 'ABANDONED');
 
-  type Section = { title: string; data: Goal[] };
-  const sections: Section[] = [
-    { title: 'Active', data: activeGoals },
-    { title: 'Completed', data: completedGoals },
-    { title: 'Abandoned', data: abandonedGoals },
-  ].filter((s) => s.data.length > 0);
+    const sections = [
+      { title: 'Active', data: active },
+      { title: 'Completed', data: completed },
+      { title: 'Abandoned', data: abandoned },
+    ].filter((s) => s.data.length > 0);
 
-  type ListItem =
-    | { type: 'add' }
-    | { type: 'header'; title: string }
-    | { type: 'goal'; goal: Goal }
-    | { type: 'empty' };
-
-  const listItems: ListItem[] = [{ type: 'add' }];
-  for (const section of sections) {
-    listItems.push({ type: 'header', title: section.title });
-    for (const goal of section.data) {
-      listItems.push({ type: 'goal', goal });
+    const items: ListItem[] = [{ type: 'add' }];
+    for (const section of sections) {
+      items.push({ type: 'header', title: section.title });
+      for (const goal of section.data) {
+        items.push({ type: 'goal', goal });
+      }
     }
-  }
-
-  if (sections.length === 0) {
-    listItems.push({ type: 'empty' });
-  }
+    if (sections.length === 0) items.push({ type: 'empty' });
+    return items;
+  }, [goals]);
 
   return (
     <ThemedView style={styles.screen}>

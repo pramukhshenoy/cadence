@@ -16,7 +16,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { Spacing, BottomTabInset } from '@/constants/theme';
 import { useChatStream, type ChatMessage } from '@/hooks/use-chat-stream';
 
-function MessageBubble({ message, theme }: { message: ChatMessage; theme: ReturnType<typeof useTheme> }) {
+const MessageBubble = React.memo(function MessageBubble({ message }: { message: ChatMessage }) {
+  const theme = useTheme();
   const isUser = message.role === 'user';
   return (
     <View style={[styles.bubbleRow, isUser ? styles.bubbleRowUser : styles.bubbleRowAssistant]}>
@@ -38,7 +39,7 @@ function MessageBubble({ message, theme }: { message: ChatMessage; theme: Return
       </View>
     </View>
   );
-}
+});
 
 export default function ChatScreen() {
   const theme = useTheme();
@@ -93,7 +94,7 @@ export default function ChatScreen() {
               ref={flatListRef}
               data={messages}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <MessageBubble message={item} theme={theme} />}
+              renderItem={({ item }) => <MessageBubble message={item} />}
               contentContainerStyle={styles.listContent}
               onContentSizeChange={handleContentSizeChange}
               keyboardShouldPersistTaps="handled"

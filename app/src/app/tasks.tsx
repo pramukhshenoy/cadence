@@ -122,21 +122,21 @@ export default function TasksScreen() {
     (title: string, priority: Priority, dueDate: string | null, goalId: string | null) => {
       createTask.mutate({ title, priority, dueDate, goalId });
     },
-    [createTask.mutate],
+    [createTask],
   );
 
   const handleUpdate = useCallback(
     (id: string, payload: UpdateTaskPayload) => {
       updateTask.mutate({ id, payload });
     },
-    [updateTask.mutate],
+    [updateTask],
   );
 
   const handleDelete = useCallback(
     (id: string) => {
       deleteTask.mutate(id);
     },
-    [deleteTask.mutate],
+    [deleteTask],
   );
 
   return (

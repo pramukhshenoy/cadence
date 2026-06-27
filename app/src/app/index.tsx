@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -56,25 +56,25 @@ export default function DashboardScreen() {
   const { data: focusSummary } = useFocusWeekSummary();
   const sleepSummary = useSleepSummary();
 
-  const today = todayMidnight();
+  const { tasksDueTodayCount, overdueCount } = useMemo(() => {
+    const today = todayMidnight();
+    let tasksDue = 0;
+    let overdue = 0;
+    for (const t of tasks) {
+      if (!t.dueDate || t.status === 'DONE') continue;
+      const d = new Date(t.dueDate);
+      d.setHours(0, 0, 0, 0);
+      if (isSameDay(d, today)) tasksDue++;
+      else if (d < today) overdue++;
+    }
+    return { tasksDueTodayCount: tasksDue, overdueCount: overdue };
+  }, [tasks]);
 
-  const tasksDueTodayCount = tasks.filter((t) => {
-    if (!t.dueDate || t.status === 'DONE') return false;
-    const d = new Date(t.dueDate);
-    d.setHours(0, 0, 0, 0);
-    return isSameDay(d, today);
-  }).length;
-
-  const overdueCount = tasks.filter((t) => {
-    if (!t.dueDate || t.status === 'DONE') return false;
-    const d = new Date(t.dueDate);
-    d.setHours(0, 0, 0, 0);
-    return d < today;
-  }).length;
-
-  const habitsTotal = habits.length;
-  const habitsDone = habits.filter((h) => h.completedToday).length;
-  const habitsAllDone = habitsTotal > 0 && habitsDone === habitsTotal;
+  const { habitsTotal, habitsDone, habitsAllDone } = useMemo(() => {
+    const total = habits.length;
+    const done = habits.filter((h) => h.completedToday).length;
+    return { habitsTotal: total, habitsDone: done, habitsAllDone: total > 0 && done === total };
+  }, [habits]);
 
   return (
     <ThemedView style={styles.container}>

@@ -11,7 +11,7 @@ interface HabitItemProps {
   onDelete: (id: string) => void;
 }
 
-export function HabitItem({ habit, onToggle, onDelete }: HabitItemProps) {
+export const HabitItem = React.memo(function HabitItem({ habit, onToggle, onDelete }: HabitItemProps) {
   const theme = useTheme();
   const swipeable = useRef<React.ElementRef<typeof ReanimatedSwipeable>>(null);
 
@@ -77,7 +77,7 @@ export function HabitItem({ habit, onToggle, onDelete }: HabitItemProps) {
       </Pressable>
     </ReanimatedSwipeable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

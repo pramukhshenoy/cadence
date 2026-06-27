@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,23 +19,35 @@ export default function HabitsScreen() {
   const uncompleteHabit = useUncompleteHabit();
   const deleteHabit = useDeleteHabit();
 
-  const doneCount = habits.filter((h) => h.completedToday).length;
+  const doneCount = useMemo(
+    () => habits.filter((h) => h.completedToday).length,
+    [habits],
+  );
 
-  function handleAdd(name: string, frequency: Frequency, weeklyTargetDays?: number[]) {
-    createHabit.mutate({ name, frequency, weeklyTargetDays });
-  }
+  const handleAdd = useCallback(
+    (name: string, frequency: Frequency, weeklyTargetDays?: number[]) => {
+      createHabit.mutate({ name, frequency, weeklyTargetDays });
+    },
+    [createHabit],
+  );
 
-  function handleToggle(id: string, completedToday: boolean) {
-    if (completedToday) {
-      uncompleteHabit.mutate(id);
-    } else {
-      completeHabit.mutate(id);
-    }
-  }
+  const handleToggle = useCallback(
+    (id: string, completedToday: boolean) => {
+      if (completedToday) {
+        uncompleteHabit.mutate(id);
+      } else {
+        completeHabit.mutate(id);
+      }
+    },
+    [completeHabit, uncompleteHabit],
+  );
 
-  function handleDelete(id: string) {
-    deleteHabit.mutate(id);
-  }
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteHabit.mutate(id);
+    },
+    [deleteHabit],
+  );
 
   return (
     <ThemedView style={styles.container}>
