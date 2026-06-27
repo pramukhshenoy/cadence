@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   SectionList,
   SectionListData,
@@ -37,13 +37,17 @@ function buildPrioritySections(tasks: Task[]): SectionListData<Task>[] {
   })).filter((s) => s.data.length > 0);
 }
 
+function localISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function buildDueDateSections(tasks: Task[]): SectionListData<Task>[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const weekEnd = new Date(today);
-  weekEnd.setDate(today.getDate() + 7);
+  const now = new Date();
+  const todayStr = localISODate(now);
+  const tomorrowStr = localISODate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
 
   const overdue: Task[] = [];
   const todayTasks: Task[] = [];
@@ -61,13 +65,13 @@ function buildDueDateSections(tasks: Task[]): SectionListData<Task>[] {
       noDate.push(task);
       continue;
     }
-    const d = new Date(task.dueDate);
-    d.setHours(0, 0, 0, 0);
-    if (d < today) {
+    // Compare only the date portion (YYYY-MM-DD) to avoid UTC↔local conversion bugs
+    const dateStr = task.dueDate.split('T')[0];
+    if (dateStr < todayStr) {
       overdue.push(task);
-    } else if (d.getTime() === today.getTime()) {
+    } else if (dateStr === todayStr) {
       todayTasks.push(task);
-    } else if (d.getTime() === tomorrow.getTime()) {
+    } else if (dateStr === tomorrowStr) {
       tomorrowTasks.push(task);
     } else {
       upcoming.push(task);
@@ -95,29 +99,45 @@ export default function TasksScreen() {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
 
-  const filtered = tasks.filter((t) => {
-    if (statusFilter === null && t.status === 'DONE') return false;
-    if (statusFilter !== null && t.status !== statusFilter) return false;
-    if (priorityFilter && t.priority !== priorityFilter) return false;
-    return true;
-  });
+  const filtered = useMemo(
+    () =>
+      tasks.filter((t) => {
+        if (statusFilter === null && t.status === 'DONE') return false;
+        if (statusFilter !== null && t.status !== statusFilter) return false;
+        if (priorityFilter && t.priority !== priorityFilter) return false;
+        return true;
+      }),
+    [tasks, statusFilter, priorityFilter],
+  );
 
-  const sections =
-    groupBy === 'priority'
-      ? buildPrioritySections(filtered)
-      : buildDueDateSections(filtered);
+  const sections = useMemo(
+    () =>
+      groupBy === 'priority'
+        ? buildPrioritySections(filtered)
+        : buildDueDateSections(filtered),
+    [filtered, groupBy],
+  );
 
-  function handleAdd(title: string, priority: Priority, dueDate: string | null) {
-    createTask.mutate({ title, priority, dueDate });
-  }
+  const handleAdd = useCallback(
+    (title: string, priority: Priority, dueDate: string | null) => {
+      createTask.mutate({ title, priority, dueDate });
+    },
+    [createTask.mutate],
+  );
 
-  function handleUpdate(id: string, payload: UpdateTaskPayload) {
-    updateTask.mutate({ id, payload });
-  }
+  const handleUpdate = useCallback(
+    (id: string, payload: UpdateTaskPayload) => {
+      updateTask.mutate({ id, payload });
+    },
+    [updateTask.mutate],
+  );
 
-  function handleDelete(id: string) {
-    deleteTask.mutate(id);
-  }
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteTask.mutate(id);
+    },
+    [deleteTask.mutate],
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -170,25 +190,15 @@ export default function TasksScreen() {
             }
             renderSectionHeader={({ section }) => (
               <View style={styles.sectionHeader}>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    { color: theme.textSecondary },
-                  ]}>
+                <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
                   {section.title.toUpperCase()}
                 </Text>
               </View>
             )}
             renderItem={({ item }) => (
-              <TaskItem
-                task={item}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
+              <TaskItem task={item} onUpdate={handleUpdate} onDelete={handleDelete} />
             )}
-            SectionSeparatorComponent={() => (
-              <View style={{ height: Spacing.two }} />
-            )}
+            SectionSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
           />
         )}
       </SafeAreaView>

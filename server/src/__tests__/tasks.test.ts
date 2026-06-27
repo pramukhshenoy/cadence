@@ -164,6 +164,26 @@ describe('POST /api/tasks', () => {
       .set('Authorization', AUTH)
       .send({ title: 'Test', priority: 'HIGH', dueDate: '2026-06-24' });
     expect(res.status).toBe(201);
+    expect(prisma.task.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ dueDate: new Date('2026-06-24') }),
+      }),
+    );
+  });
+
+  it('silently ignores dueDate when not a string (non-null, non-string)', async () => {
+    (prisma.task.create as jest.Mock).mockResolvedValue(mockTask);
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', AUTH)
+      .send({ title: 'Test', priority: 'HIGH', dueDate: 42 });
+    // Server currently accepts this and stores dueDate as null; document that behaviour
+    expect(res.status).toBe(201);
+    expect(prisma.task.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ dueDate: null }),
+      }),
+    );
   });
 
   it('accepts an explicit status', async () => {
@@ -250,6 +270,20 @@ describe('PATCH /api/tasks/:id', () => {
       .set('Authorization', AUTH)
       .send({ dueDate: 42 });
     expect(res.status).toBe(400);
+  });
+
+  it('accepts a valid dueDate string', async () => {
+    const updated = { ...mockTask, dueDate: '2026-06-26T00:00:00.000Z' };
+    (prisma.task.update as jest.Mock).mockResolvedValue(updated);
+    const res = await request(app)
+      .patch('/api/tasks/cuid1')
+      .set('Authorization', AUTH)
+      .send({ dueDate: '2026-06-26' });
+    expect(res.status).toBe(200);
+    expect(prisma.task.update).toHaveBeenCalledWith({
+      where: { id: 'cuid1' },
+      data: { dueDate: new Date('2026-06-26') },
+    });
   });
 
   it('accepts null dueDate to clear the field', async () => {

@@ -5,10 +5,17 @@ import { useTheme } from '@/hooks/use-theme';
 import { Spacing, CardShadow } from '@/constants/theme';
 import type { Task, Priority, UpdateTaskPayload } from '@/types/task';
 
+function toLocalISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function offsetDate(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
+  return toLocalISODate(d);
 }
 
 function formatDateShort(iso: string): string {
@@ -36,7 +43,7 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
 }
 
-export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
+export const TaskItem = React.memo(function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
   const theme = useTheme();
   const swipeable = useRef<React.ElementRef<typeof ReanimatedSwipeable>>(null);
   const [editing, setEditing] = useState(false);
@@ -239,12 +246,12 @@ export function TaskItem({ task, onUpdate, onDelete }: TaskItemProps) {
       </View>
     </ReanimatedSwipeable>
   );
-}
+});
 
 function toLocalMidnight(iso: string): Date {
-  const d = new Date(iso);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  // Parse date portion as local midnight to avoid UTC↔local shift
+  const [year, month, day] = iso.split('T')[0].split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function isOverdue(iso: string): boolean {
