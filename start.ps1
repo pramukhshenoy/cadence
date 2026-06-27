@@ -38,7 +38,11 @@ if (-not $useDevClient) {
         Start-Process -FilePath $emulator -ArgumentList "-avd Pixel_8"
         Write-Host "Waiting for emulator to boot..." -ForegroundColor Cyan
         & $adb wait-for-device
-        Start-Sleep -Seconds 5
+        do {
+            Start-Sleep -Seconds 2
+            $bootCompleted = (& $adb shell getprop sys.boot_completed 2>$null).Trim()
+        } until ($bootCompleted -eq "1")
+        Start-Sleep -Seconds 2
     }
 }
 
