@@ -9,6 +9,7 @@ import {
   FOCUS_WEEK_SUMMARY_KEY,
 } from '@/lib/focus-blocks';
 import { postSleepRecord } from '@/lib/sleep';
+import { showToast } from '@/lib/toast';
 import { useAppSettings } from '@/lib/settings';
 import { useSleepSummary, SLEEP_SUMMARY_KEY } from '@/hooks/use-sleep-sync';
 import type { SleepSummary } from '@/types/sleep';
@@ -81,7 +82,10 @@ export function useSleepReschedule() {
 
     // guard stays set on error — prevents a retry storm if the backend is temporarily down
     run().catch((err: unknown) => {
-      if (!cancelled) console.error('[SleepReschedule]', err);
+      if (!cancelled) {
+        console.error('[SleepReschedule]', err);
+        showToast('Sleep reschedule failed');
+      }
     });
 
     return () => {

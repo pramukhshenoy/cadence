@@ -105,7 +105,7 @@ const TABS: { name: string; title: string; icon: TabName }[] = [
   { name: 'settings', title: 'Settings', icon: 'settings' },
 ];
 
-const HIDDEN_SCREENS = ['calendar-setup', 'goals/[id]'];
+const HIDDEN_SCREENS = ['calendar-setup', 'goals/[id]', 'onboarding'];
 
 export default function AppTabs() {
   const scheme = useColorScheme() ?? 'light';

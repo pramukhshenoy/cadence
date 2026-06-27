@@ -16,6 +16,8 @@ import {
   saveFocusBlocks,
   FOCUS_WEEK_SUMMARY_KEY,
 } from '@/lib/focus-blocks';
+import { scheduleFocusBlockAlert } from '@/lib/notifications';
+import { showToast } from '@/lib/toast';
 import { useAppSettings } from '@/lib/settings';
 
 export function useCalendarSync() {
@@ -29,7 +31,13 @@ export function useCalendarSync() {
 
     async function runSync() {
       const permStatus = await getCalendarPermissionStatus();
-      if (cancelled || permStatus !== 'granted') return;
+      if (cancelled) return;
+      if (permStatus !== 'granted') {
+        if (permStatus === 'denied') {
+          showToast('Calendar permission denied — enable in device Settings');
+        }
+        return;
+      }
 
       // Fetch active blocks and source calendar IDs in parallel
       const [activeBlocks, sourceCalendarIds] = await Promise.all([
@@ -87,6 +95,13 @@ export function useCalendarSync() {
 
       if (toSave.length > 0) {
         await saveFocusBlocks(toSave);
+        // Schedule a 15-min pre-alert for each newly written focus block
+        for (const block of toSave) {
+          const scheduled = focusBlocks.find((fb) => fb.calendarMarker === block.calendarMarker);
+          if (scheduled) {
+            scheduleFocusBlockAlert(scheduled.startTime, scheduled.title).catch(() => {});
+          }
+        }
       }
       queryClient.invalidateQueries({ queryKey: FOCUS_WEEK_SUMMARY_KEY });
     }
@@ -94,6 +109,7 @@ export function useCalendarSync() {
     runSync().catch((err: unknown) => {
       if (!cancelled) {
         console.error('[CalendarSync]', err);
+        showToast('Calendar sync failed');
       }
     });
 
