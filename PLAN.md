@@ -36,5 +36,5 @@ Single-user Android app. Primary interaction is through an AI chat interface tha
 - [x] Phase 3 — AI Chat ([x] 3a chat SSE · [x] 3b models · [x] 3c chat UI · [x] 3d settings)
 - [x] Phase 4 — Calendar ([x] 4a permissions · [x] 4b algorithm · [x] 4c sync flow · [x] 4d widget)
 - [x] Phase 5 — Sleep ([x] 5a health connect · [x] 5b backend · [x] 5c reschedule flow · [x] 5d dashboard)
-- [ ] Phase 6 — Polish (6a notifications · [x] 6b dark mode · 6c onboarding · 6d error handling)
+- [x] Phase 6 — Polish ([x] 6a notifications · [x] 6b dark mode · [x] 6c onboarding · [x] 6d error handling)
 - [x] Phase 7 — Goals ([x] 7a backend · [x] 7b goals screen · [x] 7c task-goal linking)

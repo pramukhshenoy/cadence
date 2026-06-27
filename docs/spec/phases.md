@@ -173,30 +173,30 @@ Git push follows each commit if a remote is configured.
 
 ## Phase 6 — Polish
 
-### 6a — Push Notifications
-- [ ] Expo Notifications setup
-- [ ] Task due date reminders (day before + day of)
-- [ ] Focus block start alerts (15 min before)
-- [ ] `git commit`: `phase-6a: push notifications`
+### 6a — Push Notifications ✅
+- [x] Expo Notifications setup
+- [x] Task due date reminders (day before + day of)
+- [x] Focus block start alerts (15 min before)
+- [x] `git commit`: `phase-6a: push notifications`
 
 ### 6b — Dark Mode ✅
 - [x] NativeWind dark mode throughout all screens
 - [x] Respects system preference
 - [x] `git commit`: `phase-6b: dark mode`
 
-### 6c — Full Onboarding
-- [ ] Server URL + bearer token setup screen
-- [ ] Calendar permission + calendar selection flow
-- [ ] Health Connect permission flow
-- [ ] Skip options for calendar and Health Connect (graceful degradation)
-- [ ] `git commit`: `phase-6c: onboarding screen`
+### 6c — Full Onboarding ✅
+- [x] Server URL + bearer token setup screen
+- [x] Calendar permission + calendar selection flow
+- [x] Health Connect permission flow
+- [x] Skip options for calendar and Health Connect (graceful degradation)
+- [x] `git commit`: `phase-6c: onboarding screen`
 
-### 6d — Error Handling & Offline States
-- [ ] Backend unreachable: show banner, disable dependent features
-- [ ] Calendar permission denied: show prompt to enable in Settings
-- [ ] Health Connect unavailable: hide sleep card gracefully
-- [ ] API error toasts
-- [ ] `git commit`: `phase-6d: error handling and offline states`
+### 6d — Error Handling & Offline States ✅
+- [x] Backend unreachable: show banner, disable dependent features
+- [x] Calendar permission denied: show prompt to enable in Settings
+- [x] Health Connect unavailable: hide sleep card gracefully
+- [x] API error toasts
+- [x] `git commit`: `phase-6d: error handling and offline states`
 
 ---
 
