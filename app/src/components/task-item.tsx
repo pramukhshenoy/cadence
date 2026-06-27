@@ -3,6 +3,7 @@ import { View, Text, Pressable, TextInput, StyleSheet, ScrollView } from 'react-
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, CardShadow } from '@/constants/theme';
+import { useGoals } from '@/lib/goals';
 import type { Task, Priority, UpdateTaskPayload } from '@/types/task';
 
 function toLocalISODate(d: Date): string {
@@ -50,11 +51,17 @@ export const TaskItem = React.memo(function TaskItem({ task, onUpdate, onDelete 
   const [editTitle, setEditTitle] = useState(task.title);
   const [editPriority, setEditPriority] = useState<Priority>(task.priority);
   const [editDueDate, setEditDueDate] = useState<string | null>(task.dueDate ?? null);
+  const [editGoalId, setEditGoalId] = useState<string | null>(task.goalId);
+
+  const { data: allGoals = [] } = useGoals();
+  const activeGoals = allGoals.filter((g) => g.status === 'ACTIVE');
+  const linkedGoal = task.goalId ? allGoals.find((g) => g.id === task.goalId) : null;
 
   function openEdit() {
     setEditTitle(task.title);
     setEditPriority(task.priority);
     setEditDueDate(task.dueDate ?? null);
+    setEditGoalId(task.goalId);
     setEditing(true);
   }
 
@@ -72,6 +79,7 @@ export const TaskItem = React.memo(function TaskItem({ task, onUpdate, onDelete 
     if (trimmed !== task.title) updates.title = trimmed;
     if (editPriority !== task.priority) updates.priority = editPriority;
     if (editDueDate !== (task.dueDate ?? null)) updates.dueDate = editDueDate;
+    if (editGoalId !== task.goalId) updates.goalId = editGoalId;
     if (Object.keys(updates).length > 0) onUpdate(task.id, updates);
     setEditing(false);
   }
@@ -195,6 +203,38 @@ export const TaskItem = React.memo(function TaskItem({ task, onUpdate, onDelete 
                 );
               })}
             </ScrollView>
+            {activeGoals.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.goalScrollContent}>
+                <Text style={[styles.dateEditLabel, { color: theme.textSecondary }]}>Goal</Text>
+                {editGoalId !== null && (
+                  <Pressable
+                    onPress={() => setEditGoalId(null)}
+                    style={[styles.priorityChip, { borderColor: theme.border }]}>
+                    <Text style={[styles.priorityChipLabel, { color: theme.textSecondary }]}>✕ None</Text>
+                  </Pressable>
+                )}
+                {activeGoals.map((g) => {
+                  const selected = editGoalId === g.id;
+                  return (
+                    <Pressable
+                      key={g.id}
+                      onPress={() => setEditGoalId(selected ? null : g.id)}
+                      style={[
+                        styles.priorityChip,
+                        { borderColor: theme.border },
+                        selected && { backgroundColor: theme.accent, borderColor: theme.accent },
+                      ]}>
+                      <Text style={[styles.priorityChipLabel, { color: selected ? theme.accentForeground : theme.textSecondary }]} numberOfLines={1}>
+                        {g.title.length > 20 ? g.title.slice(0, 18) + '…' : g.title}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
             <View style={styles.editButtons}>
               <Pressable
                 onPress={saveEdit}
@@ -235,6 +275,11 @@ export const TaskItem = React.memo(function TaskItem({ task, onUpdate, onDelete 
               {task.dueDate != null && (
                 <Text style={[styles.due, { color: isOverdue(task.dueDate) && !isDone ? '#EF4444' : theme.textSecondary }]}>
                   {formatDue(task.dueDate)}
+                </Text>
+              )}
+              {linkedGoal != null && (
+                <Text style={[styles.goalBadge, { color: theme.accent }]} numberOfLines={1}>
+                  ◎ {linkedGoal.title.length > 24 ? linkedGoal.title.slice(0, 22) + '…' : linkedGoal.title}
                 </Text>
               )}
             </View>
@@ -322,6 +367,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
+  goalBadge: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '500',
+  },
   inProgressBadge: {
     fontSize: 11,
     fontWeight: '600',
@@ -358,6 +408,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+  },
+  goalScrollContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    marginTop: 2,
   },
   dateEditLabel: {
     fontSize: 12,

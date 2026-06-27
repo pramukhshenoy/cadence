@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api-client';
+import { GOALS_QUERY_KEY } from './goals';
 import type { Task, CreateTaskPayload, UpdateTaskPayload } from '@/types/task';
 
 export const TASKS_QUERY_KEY = ['tasks'] as const;
@@ -26,7 +27,10 @@ export function useCreateTask() {
       if (!res.ok) throw new Error('Failed to create task');
       return res.json() as Promise<Task>;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: TASKS_QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
+      qc.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
+    },
   });
 }
 
@@ -47,7 +51,10 @@ export function useUpdateTask() {
       if (!res.ok) throw new Error('Failed to update task');
       return res.json() as Promise<Task>;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: TASKS_QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
+      qc.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
+    },
   });
 }
 
@@ -58,6 +65,9 @@ export function useDeleteTask() {
       const res = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete task');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: TASKS_QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
+      qc.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
+    },
   });
 }

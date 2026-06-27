@@ -5,10 +5,12 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
+  ScrollView,
   Keyboard,
 } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, CardShadow } from '@/constants/theme';
+import { useGoals } from '@/lib/goals';
 import type { Priority } from '@/types/task';
 
 const PRIORITIES: Priority[] = ['HIGH', 'MEDIUM', 'LOW'];
@@ -44,24 +46,31 @@ const DATE_PRESETS = [
 ];
 
 interface AddTaskProps {
-  onAdd: (title: string, priority: Priority, dueDate: string | null) => void;
+  onAdd: (title: string, priority: Priority, dueDate: string | null, goalId: string | null) => void;
+  goalId?: string | null;
 }
 
-export function AddTask({ onAdd }: AddTaskProps) {
+export function AddTask({ onAdd, goalId: preselectedGoalId }: AddTaskProps) {
   const theme = useTheme();
   const inputRef = useRef<TextInput>(null);
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('MEDIUM');
   const [dueDate, setDueDate] = useState<string | null>(null);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+
+  const { data: allGoals = [] } = useGoals();
+  const activeGoals = allGoals.filter((g) => g.status === 'ACTIVE');
+  const showGoalSelector = preselectedGoalId === undefined && activeGoals.length > 0;
 
   function submit() {
     const trimmed = title.trim();
     if (!trimmed) return;
-    onAdd(trimmed, priority, dueDate);
+    onAdd(trimmed, priority, dueDate, preselectedGoalId ?? selectedGoalId ?? null);
     setTitle('');
     setPriority('MEDIUM');
     setDueDate(null);
+    setSelectedGoalId(null);
     inputRef.current?.focus();
   }
 
@@ -69,6 +78,7 @@ export function AddTask({ onAdd }: AddTaskProps) {
     setTitle('');
     setPriority('MEDIUM');
     setDueDate(null);
+    setSelectedGoalId(null);
     setExpanded(false);
     Keyboard.dismiss();
   }
@@ -162,6 +172,34 @@ export function AddTask({ onAdd }: AddTaskProps) {
           })}
         </View>
       )}
+      {expanded && showGoalSelector && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[styles.goalScrollRow, { borderTopColor: theme.border }]}
+          contentContainerStyle={styles.goalScrollContent}>
+          <Text style={[styles.dateLabel, { color: theme.textSecondary }]}>Goal</Text>
+          {activeGoals.map((g) => {
+            const selected = selectedGoalId === g.id;
+            return (
+              <Pressable
+                key={g.id}
+                onPress={() => setSelectedGoalId(selected ? null : g.id)}
+                style={[
+                  styles.chip,
+                  { borderColor: theme.border },
+                  selected && { backgroundColor: theme.accent, borderColor: theme.accent },
+                ]}>
+                <Text
+                  style={[styles.chipLabel, { color: selected ? theme.accentForeground : theme.textSecondary }]}
+                  numberOfLines={1}>
+                  {g.title.length > 20 ? g.title.slice(0, 18) + '…' : g.title}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -215,6 +253,17 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two + 4,
     gap: Spacing.two,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  goalScrollRow: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  goalScrollContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.two + 4,
+    paddingTop: Spacing.two,
+    gap: Spacing.two,
   },
   dateLabel: {
     fontSize: 12,

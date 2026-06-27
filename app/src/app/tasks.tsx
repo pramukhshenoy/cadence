@@ -119,8 +119,8 @@ export default function TasksScreen() {
   );
 
   const handleAdd = useCallback(
-    (title: string, priority: Priority, dueDate: string | null) => {
-      createTask.mutate({ title, priority, dueDate });
+    (title: string, priority: Priority, dueDate: string | null, goalId: string | null) => {
+      createTask.mutate({ title, priority, dueDate, goalId });
     },
     [createTask.mutate],
   );

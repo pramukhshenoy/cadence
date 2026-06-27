@@ -45,7 +45,7 @@ export default function GoalDetailScreen() {
   const visibleTasks = showCompleted ? goalTasks : goalTasks.filter((t) => t.status !== 'DONE');
 
   function handleAddTask(title: string, priority: Priority, dueDate: string | null) {
-    createTask.mutate({ title, priority, dueDate, goalId: id });
+    createTask.mutate({ title, priority, dueDate, goalId: id ?? null });
   }
 
   function handleUpdateTask(taskId: string, payload: UpdateTaskPayload) {
@@ -165,7 +165,7 @@ export default function GoalDetailScreen() {
 
           if (item.type === 'addTask') {
             if (goal.status !== 'ACTIVE') return null;
-            return <AddTask onAdd={handleAddTask} />;
+            return <AddTask onAdd={handleAddTask} goalId={id} />;
           }
 
           if (item.type === 'taskSectionLabel') {

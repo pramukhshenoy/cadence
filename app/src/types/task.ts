@@ -27,4 +27,5 @@ export interface UpdateTaskPayload {
   priority?: Priority;
   dueDate?: string | null;
   status?: TaskStatus;
+  goalId?: string | null;
 }
