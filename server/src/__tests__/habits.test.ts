@@ -516,3 +516,116 @@ describe('DELETE /api/habits/:id/complete', () => {
     expect(res.status).toBe(401);
   });
 });
+
+// ─── weeklyTargetCount: malformed JSON stored value ───────────────────────────
+
+// These describes switch back to real timers so Express error routing (setImmediate)
+// is not blocked by the fake timers installed in the outer beforeAll.
+describe('GET /api/habits — malformed weeklyTargetDays in DB', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`));
+  });
+
+  it('falls back to target count of 1 when weeklyTargetDays is invalid JSON', async () => {
+    // Simulate a corrupted DB row: WEEKLY habit with non-parseable weeklyTargetDays
+    (prisma.habit.findMany as jest.Mock).mockResolvedValue([{
+      ...mockHabit,
+      frequency: 'WEEKLY',
+      weeklyTargetDays: 'not-valid-json',
+      completions: [],
+    }]);
+    const res = await request(app)
+      .get('/api/habits')
+      .set('Authorization', AUTH)
+      .set(TZ_HEADER);
+    expect(res.status).toBe(200);
+    // With target=1 and no completions, streak=0
+    expect(res.body[0].streak).toBe(0);
+  });
+});
+
+// ─── Error propagation (catch paths) ─────────────────────────────────────────
+
+describe('GET /api/habits — error propagation', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`)); });
+
+  it('returns 500 when prisma.habit.findMany throws', async () => {
+    (prisma.habit.findMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app).get('/api/habits').set('Authorization', AUTH).set(TZ_HEADER);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/habits — error propagation', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`)); });
+
+  it('returns 500 when prisma.habit.create throws', async () => {
+    (prisma.habit.create as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/habits')
+      .set('Authorization', AUTH)
+      .send({ name: 'Run', frequency: 'DAILY' });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('PATCH /api/habits/:id — error propagation', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`)); });
+
+  it('returns 500 when prisma.habit.update throws unexpected (non-P2025) error', async () => {
+    (prisma.habit.update as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .patch('/api/habits/habit1')
+      .set('Authorization', AUTH)
+      .send({ name: 'Evening run' });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('DELETE /api/habits/:id — error propagation', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`)); });
+
+  it('returns 500 when prisma.habit.delete throws unexpected error', async () => {
+    (prisma.habit.delete as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .delete('/api/habits/habit1')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/habits/:id/complete — error propagation', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`)); });
+
+  it('returns 500 when prisma.habitCompletion.upsert throws', async () => {
+    (prisma.habit.findUnique as jest.Mock).mockResolvedValue(mockHabit);
+    (prisma.habitCompletion.upsert as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/habits/habit1/complete')
+      .set('Authorization', AUTH)
+      .set(TZ_HEADER);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('DELETE /api/habits/:id/complete — error propagation', () => {
+  beforeAll(() => jest.useRealTimers());
+  afterAll(() => { jest.useFakeTimers(); jest.setSystemTime(new Date(`${FIXED_TODAY}T12:00:00Z`)); });
+
+  it('returns 500 when prisma.habitCompletion.deleteMany throws', async () => {
+    (prisma.habit.findUnique as jest.Mock).mockResolvedValue(mockHabit);
+    (prisma.habitCompletion.deleteMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .delete('/api/habits/habit1/complete')
+      .set('Authorization', AUTH)
+      .set(TZ_HEADER);
+    expect(res.status).toBe(500);
+  });
+});

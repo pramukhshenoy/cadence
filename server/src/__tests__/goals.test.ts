@@ -330,6 +330,22 @@ describe('PATCH /api/goals/:id', () => {
     });
   });
 
+  it('accepts a valid ISO targetDate string and stores it as a Date', async () => {
+    const updated = { ...mockGoal, targetDate: new Date('2026-12-31T00:00:00.000Z') };
+    (prisma.goal.update as jest.Mock).mockResolvedValue(updated);
+    mockZeroProgress();
+
+    const res = await request(app)
+      .patch('/api/goals/goal1')
+      .set('Authorization', AUTH)
+      .send({ targetDate: '2026-12-31' });
+    expect(res.status).toBe(200);
+    expect(prisma.goal.update).toHaveBeenCalledWith({
+      where: { id: 'goal1' },
+      data: { targetDate: new Date('2026-12-31') },
+    });
+  });
+
   it('returns 400 when body has no recognised fields', async () => {
     const res = await request(app)
       .patch('/api/goals/goal1')
@@ -383,5 +399,111 @@ describe('DELETE /api/goals/:id', () => {
   it('returns 401 without auth', async () => {
     const res = await request(app).delete('/api/goals/goal1');
     expect(res.status).toBe(401);
+  });
+});
+
+// ─── linkedHabitId field ─────────────────────────────────────────────────────
+
+describe('POST /api/goals — linkedHabitId', () => {
+  it('stores linkedHabitId when provided as a string', async () => {
+    const goalWithHabit = { ...mockGoal, linkedHabitId: 'habit1' };
+    (prisma.goal.create as jest.Mock).mockResolvedValue(goalWithHabit);
+    const res = await request(app)
+      .post('/api/goals')
+      .set('Authorization', AUTH)
+      .send({ title: 'Learn Spanish', priority: 'HIGH', linkedHabitId: 'habit1' });
+    expect(res.status).toBe(201);
+    expect(prisma.goal.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ linkedHabitId: 'habit1' }),
+      }),
+    );
+  });
+
+  it('stores null when linkedHabitId is not a string', async () => {
+    (prisma.goal.create as jest.Mock).mockResolvedValue(mockGoal);
+    await request(app)
+      .post('/api/goals')
+      .set('Authorization', AUTH)
+      .send({ title: 'Learn Spanish', priority: 'HIGH', linkedHabitId: 42 });
+    expect(prisma.goal.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ linkedHabitId: null }),
+      }),
+    );
+  });
+});
+
+describe('PATCH /api/goals/:id — linkedHabitId', () => {
+  it('updates linkedHabitId when provided', async () => {
+    const updated = { ...mockGoal, linkedHabitId: 'habit2' };
+    (prisma.goal.update as jest.Mock).mockResolvedValue(updated);
+    mockZeroProgress();
+
+    const res = await request(app)
+      .patch('/api/goals/goal1')
+      .set('Authorization', AUTH)
+      .send({ linkedHabitId: 'habit2' });
+    expect(res.status).toBe(200);
+    expect(prisma.goal.update).toHaveBeenCalledWith({
+      where: { id: 'goal1' },
+      data: { linkedHabitId: 'habit2' },
+    });
+  });
+
+  it('sets linkedHabitId to null when a non-string is passed', async () => {
+    (prisma.goal.update as jest.Mock).mockResolvedValue({ ...mockGoal, linkedHabitId: null });
+    mockZeroProgress();
+
+    await request(app)
+      .patch('/api/goals/goal1')
+      .set('Authorization', AUTH)
+      .send({ linkedHabitId: null });
+    expect(prisma.goal.update).toHaveBeenCalledWith({
+      where: { id: 'goal1' },
+      data: { linkedHabitId: null },
+    });
+  });
+});
+
+// ─── Error propagation (catch paths) ─────────────────────────────────────────
+
+describe('GET /api/goals — error propagation', () => {
+  it('returns 500 when prisma.goal.findMany throws', async () => {
+    (prisma.goal.findMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app).get('/api/goals').set('Authorization', AUTH);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/goals — error propagation', () => {
+  it('returns 500 when prisma.goal.create throws', async () => {
+    (prisma.goal.create as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/goals')
+      .set('Authorization', AUTH)
+      .send({ title: 'Learn Spanish', priority: 'HIGH' });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('PATCH /api/goals/:id — error propagation', () => {
+  it('returns 500 when prisma.goal.update throws unexpected error', async () => {
+    (prisma.goal.update as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .patch('/api/goals/goal1')
+      .set('Authorization', AUTH)
+      .send({ title: 'Test' });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('DELETE /api/goals/:id — error propagation', () => {
+  it('returns 500 when transaction throws unexpected error', async () => {
+    (prisma.$transaction as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .delete('/api/goals/goal1')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(500);
   });
 });

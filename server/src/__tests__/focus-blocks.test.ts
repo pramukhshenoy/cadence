@@ -332,3 +332,61 @@ describe('GET /api/focus-blocks/week-summary', () => {
     );
   });
 });
+
+// ─── Error propagation (catch paths) ─────────────────────────────────────────
+
+describe('GET /api/focus-blocks/week-summary — error propagation', () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date('2026-06-25T10:00:00.000Z') });
+    (prisma.settings.findUnique as jest.Mock).mockResolvedValue(defaultSettings);
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('returns 500 when prisma.focusBlock.findMany throws', async () => {
+    (prisma.focusBlock.findMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .get('/api/focus-blocks/week-summary')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', 'UTC');
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('GET /api/focus-blocks — error propagation', () => {
+  it('returns 500 when prisma.focusBlock.findMany throws', async () => {
+    (prisma.focusBlock.findMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app).get('/api/focus-blocks').set('Authorization', AUTH);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/focus-blocks/batch — error propagation', () => {
+  it('returns 500 when prisma.focusBlock.createMany throws', async () => {
+    (prisma.focusBlock.createMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/focus-blocks/batch')
+      .set('Authorization', AUTH)
+      .send({
+        blocks: [{
+          deviceCalendarEventId: 'cal-1',
+          calendarMarker: 'uuid-1',
+          startTime: '2026-06-25T09:00:00.000Z',
+          endTime: '2026-06-25T10:00:00.000Z',
+        }],
+      });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('PATCH /api/focus-blocks/batch-delete — error propagation', () => {
+  it('returns 500 when prisma.focusBlock.updateMany throws', async () => {
+    (prisma.focusBlock.updateMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .patch('/api/focus-blocks/batch-delete')
+      .set('Authorization', AUTH)
+      .send({ ids: ['block-1'] });
+    expect(res.status).toBe(500);
+  });
+});

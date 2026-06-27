@@ -428,3 +428,46 @@ describe('PATCH /api/tasks/:id — goalId field', () => {
     expect(res.status).toBe(400);
   });
 });
+
+// ─── Error propagation (catch paths) ─────────────────────────────────────────
+
+describe('GET /api/tasks — error propagation', () => {
+  it('returns 500 when prisma.task.findMany throws', async () => {
+    (prisma.task.findMany as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app).get('/api/tasks').set('Authorization', AUTH);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/tasks — error propagation', () => {
+  it('returns 500 when prisma.task.create throws', async () => {
+    (prisma.task.create as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', AUTH)
+      .send({ title: 'Test', priority: 'HIGH' });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('PATCH /api/tasks/:id — error propagation', () => {
+  it('returns 500 when prisma.task.update throws unexpected (non-P2025) error', async () => {
+    (prisma.goal.findUnique as jest.Mock).mockResolvedValue({ id: 'goal1' });
+    (prisma.task.update as jest.Mock).mockRejectedValue(new Error('DB constraint error'));
+    const res = await request(app)
+      .patch('/api/tasks/cuid1')
+      .set('Authorization', AUTH)
+      .send({ status: 'DONE' });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('DELETE /api/tasks/:id — error propagation', () => {
+  it('returns 500 when prisma.task.delete throws unexpected error', async () => {
+    (prisma.task.delete as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .delete('/api/tasks/cuid1')
+      .set('Authorization', AUTH);
+    expect(res.status).toBe(500);
+  });
+});

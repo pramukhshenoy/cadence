@@ -270,6 +270,31 @@ describe('PATCH /api/settings', () => {
     expect(res.body.error).toMatch(/sleepThresholdHours must be less than goodThresholdHours/);
   });
 
+  it('returns 400 when goodThresholdHours is not a positive number', async () => {
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ goodThresholdHours: -1 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when goodThresholdHours is a non-number', async () => {
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ goodThresholdHours: 'lots' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 500 when prisma.settings.upsert throws', async () => {
+    (prisma.settings.upsert as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .patch('/api/settings')
+      .set(HEADERS)
+      .send({ morningCutoffHour: 9 });
+    expect(res.status).toBe(500);
+  });
+
   it('returns 401 without auth header', async () => {
     const res = await request(app).patch('/api/settings').set(TZ).send({ preferredModel: 'claude-sonnet-4-6' });
     expect(res.status).toBe(401);

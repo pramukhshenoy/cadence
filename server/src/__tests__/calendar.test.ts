@@ -288,6 +288,37 @@ describe('scheduleBlocks', () => {
     expect(result.scheduledHours).toBe(2);
     expect(result.focusBlocks[0].startTime).toBe('2026-06-15T09:00:00.000Z');
   });
+
+  it('rounds up workStart to next 30-min boundary when now is mid-workday', () => {
+    // now = Monday 10:15 UTC; workdayStartHour = 9 → 10:15 rounds up to 10:30
+    const NOW_MID_DAY = new Date('2026-06-15T10:15:00.000Z');
+    const result = scheduleBlocks({
+      events: [],
+      timezone: 'UTC',
+      settings: UTC_SETTINGS,
+      now: NOW_MID_DAY,
+    });
+    expect(result.focusBlocks[0].startTime).toBe('2026-06-15T10:30:00.000Z');
+    expect(result.focusBlocks[0].endTime).toBe('2026-06-15T11:30:00.000Z');
+  });
+
+  it('handles multiple events on the same day (exercises sort comparator)', () => {
+    // Two events provided in reverse order; sort must order them correctly
+    const events = [
+      { startTime: '2026-06-15T14:00:00.000Z', endTime: '2026-06-15T15:00:00.000Z' },
+      { startTime: '2026-06-15T10:00:00.000Z', endTime: '2026-06-15T11:00:00.000Z' },
+    ];
+    const result = scheduleBlocks({
+      events,
+      timezone: 'UTC',
+      settings: UTC_SETTINGS,
+      now: MONDAY_MIDNIGHT,
+    });
+    // Free gaps after correct sort: [09:00-10:00] and [11:00-14:00]
+    expect(result.scheduledHours).toBe(2);
+    expect(result.focusBlocks[0].startTime).toBe('2026-06-15T09:00:00.000Z');
+    expect(result.focusBlocks[1].startTime).toBe('2026-06-15T11:00:00.000Z');
+  });
 });
 
 // ─── POST /api/calendar/sync — HTTP tests ────────────────────────────────────
@@ -361,5 +392,20 @@ describe('POST /api/calendar/sync', () => {
       expect(typeof block.endTime).toBe('string');
       expect(block.title).toBe('Focus Block');
     }
+  });
+});
+
+// ─── POST /api/calendar/sync — error propagation ──────────────────────────────
+
+describe('POST /api/calendar/sync — error propagation', () => {
+  it('returns 500 when getSettings throws', async () => {
+    (prisma.settings.findUnique as jest.Mock).mockRejectedValue(new Error('DB error'));
+    (prisma.settings.upsert as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/calendar/sync')
+      .set('Authorization', AUTH)
+      .set('X-Timezone', TZ_HEADER)
+      .send({ events: [] });
+    expect(res.status).toBe(500);
   });
 });

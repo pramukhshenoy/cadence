@@ -141,43 +141,69 @@ describe('POST /api/sleep', () => {
     expect(res.body.reschedule.performed).toBe(false);
   });
 
-  it('returns performed: true for POOR quality with morning blocks to move', async () => {
-    (prisma.sleepRecord.upsert as jest.Mock).mockResolvedValue(mockSleepRecord);
-    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([mockMorningBlock]);
-    const res = await request(app)
-      .post('/api/sleep')
-      .set(HEADERS)
-      .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
-    expect(res.status).toBe(201);
-    expect(res.body.reschedule.performed).toBe(true);
-    const deleteIds = res.body.reschedule.blocksToDelete.map((b: { id: string }) => b.id);
-    expect(deleteIds).toContain('block-morning-1');
-    const deleteCalIds = res.body.reschedule.blocksToDelete.map((b: { deviceCalendarEventId: string }) => b.deviceCalendarEventId);
-    expect(deleteCalIds).toContain('cal-1');
-    expect(res.body.reschedule.newBlocks.length).toBeGreaterThan(0);
-  });
+  // Date-sensitive POOR quality tests: pin system time to 2026-06-25 so
+  // utcToLocalDateStr(block.startTime) === todayStr inside the route handler.
+  describe('POOR quality with morning blocks (date pinned to 2026-06-25T08:00Z)', () => {
+    beforeAll(() => {
+      jest.useFakeTimers({ now: new Date('2026-06-25T08:00:00Z') });
+    });
+    afterAll(() => {
+      jest.useRealTimers();
+    });
 
-  it('returns performed: true with no blocks to move when no morning blocks exist', async () => {
-    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([]);
-    const res = await request(app)
-      .post('/api/sleep')
-      .set(HEADERS)
-      .send({ localDate: '2026-06-25', durationHours: 5.0, quality: 'POOR' });
-    expect(res.status).toBe(201);
-    expect(res.body.reschedule.performed).toBe(true);
-    expect(res.body.reschedule.blocksToDelete).toEqual([]);
-    expect(res.body.reschedule.newBlocks).toEqual([]);
-  });
+    it('returns performed: true for POOR quality with morning blocks to move', async () => {
+      (prisma.sleepRecord.upsert as jest.Mock).mockResolvedValue(mockSleepRecord);
+      (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([mockMorningBlock]);
+      const res = await request(app)
+        .post('/api/sleep')
+        .set(HEADERS)
+        .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
+      expect(res.status).toBe(201);
+      expect(res.body.reschedule.performed).toBe(true);
+      const deleteIds = res.body.reschedule.blocksToDelete.map((b: { id: string }) => b.id);
+      expect(deleteIds).toContain('block-morning-1');
+      const deleteCalIds = res.body.reschedule.blocksToDelete.map((b: { deviceCalendarEventId: string }) => b.deviceCalendarEventId);
+      expect(deleteCalIds).toContain('cal-1');
+      expect(res.body.reschedule.newBlocks.length).toBeGreaterThan(0);
+    });
 
-  it('afternoon blocks are excluded from blocksToDelete', async () => {
-    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([mockMorningBlock, mockAfternoonBlock]);
-    const res = await request(app)
-      .post('/api/sleep')
-      .set(HEADERS)
-      .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
-    expect(res.status).toBe(201);
-    const deleteIds2 = res.body.reschedule.blocksToDelete.map((b: { id: string }) => b.id);
-    expect(deleteIds2).not.toContain('block-afternoon-1');
+    it('returns performed: true with no blocks to move when no morning blocks exist', async () => {
+      (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([]);
+      const res = await request(app)
+        .post('/api/sleep')
+        .set(HEADERS)
+        .send({ localDate: '2026-06-25', durationHours: 5.0, quality: 'POOR' });
+      expect(res.status).toBe(201);
+      expect(res.body.reschedule.performed).toBe(true);
+      expect(res.body.reschedule.blocksToDelete).toEqual([]);
+      expect(res.body.reschedule.newBlocks).toEqual([]);
+    });
+
+    it('afternoon blocks are excluded from blocksToDelete', async () => {
+      (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([mockMorningBlock, mockAfternoonBlock]);
+      const res = await request(app)
+        .post('/api/sleep')
+        .set(HEADERS)
+        .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
+      expect(res.status).toBe(201);
+      const deleteIds2 = res.body.reschedule.blocksToDelete.map((b: { id: string }) => b.id);
+      expect(deleteIds2).toContain('block-morning-1');
+      expect(deleteIds2).not.toContain('block-afternoon-1');
+    });
+
+    it('stamps morning blocks as rescheduled=true in DB when POOR quality', async () => {
+      (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([mockMorningBlock]);
+      await request(app)
+        .post('/api/sleep')
+        .set(HEADERS)
+        .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
+      expect(prisma.focusBlock.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['block-morning-1'] } },
+          data: expect.objectContaining({ rescheduled: true }),
+        }),
+      );
+    });
   });
 
   it('accepts null for deepSleepHours and remSleepHours', async () => {
@@ -194,20 +220,6 @@ describe('POST /api/sleep', () => {
       .set(HEADERS)
       .send({ localDate: '2026-06-25', durationHours: 7.5, quality: 'GOOD', sessionCount: null });
     expect(res.status).toBe(201);
-  });
-
-  it('stamps morning blocks as rescheduled=true in DB when POOR quality', async () => {
-    (prisma.focusBlock.findMany as jest.Mock).mockResolvedValue([mockMorningBlock]);
-    await request(app)
-      .post('/api/sleep')
-      .set(HEADERS)
-      .send({ localDate: '2026-06-25', durationHours: 5.5, quality: 'POOR' });
-    expect(prisma.focusBlock.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: { in: ['block-morning-1'] } },
-        data: expect.objectContaining({ rescheduled: true }),
-      }),
-    );
   });
 
   it('returns 400 for missing localDate', async () => {
@@ -232,6 +244,27 @@ describe('POST /api/sleep', () => {
 
   it('returns 400 for non-integer sessionCount', async () => {
     const res = await request(app).post('/api/sleep').set(HEADERS).send({ localDate: '2026-06-25', durationHours: 7.5, quality: 'GOOD', sessionCount: 1.5 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for sessionCount less than 1', async () => {
+    const res = await request(app).post('/api/sleep').set(HEADERS).send({ localDate: '2026-06-25', durationHours: 7.5, quality: 'GOOD', sessionCount: 0 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when deepSleepHours is a non-finite non-null value', async () => {
+    const res = await request(app)
+      .post('/api/sleep')
+      .set(HEADERS)
+      .send({ localDate: '2026-06-25', durationHours: 7.5, quality: 'GOOD', deepSleepHours: 'lots' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when remSleepHours is a non-finite non-null value', async () => {
+    const res = await request(app)
+      .post('/api/sleep')
+      .set(HEADERS)
+      .send({ localDate: '2026-06-25', durationHours: 7.5, quality: 'GOOD', remSleepHours: 'lots' });
     expect(res.status).toBe(400);
   });
 
@@ -261,6 +294,23 @@ describe('GET /api/sleep/latest', () => {
   it('returns 401 without auth', async () => {
     const res = await request(app).get('/api/sleep/latest');
     expect(res.status).toBe(401);
+  });
+
+  it('returns 500 when prisma.sleepRecord.findFirst throws', async () => {
+    (prisma.sleepRecord.findFirst as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app).get('/api/sleep/latest').set(HEADERS);
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /api/sleep — error propagation', () => {
+  it('returns 500 when prisma.sleepRecord.upsert throws', async () => {
+    (prisma.sleepRecord.upsert as jest.Mock).mockRejectedValue(new Error('DB error'));
+    const res = await request(app)
+      .post('/api/sleep')
+      .set(HEADERS)
+      .send({ localDate: '2026-06-25', durationHours: 7.5, quality: 'GOOD' });
+    expect(res.status).toBe(500);
   });
 });
 
@@ -377,5 +427,20 @@ describe('computeReschedule', () => {
     for (const b of result.newBlocks) {
       expect(b.title).toBe('Focus Block');
     }
+  });
+
+  it('sorts multiple busy slots in the same window (exercises sort comparator)', () => {
+    const morningBlocks = [
+      { id: 'b1', startTime: new Date('2026-06-25T09:00:00Z'), endTime: new Date('2026-06-25T10:00:00Z') },
+    ];
+    // Two busy slots in the afternoon window, provided in reverse order
+    const busySlots = [
+      { startTime: new Date('2026-06-25T14:00:00Z'), endTime: new Date('2026-06-25T15:00:00Z') },
+      { startTime: new Date('2026-06-25T11:00:00Z'), endTime: new Date('2026-06-25T12:00:00Z') },
+    ];
+    const result = computeReschedule({ ...baseInput, morningBlocks, busySlots });
+    // After correct sort: free gap [10:00-11:00] → block scheduled there
+    expect(result.newBlocks).toHaveLength(1);
+    expect(result.newBlocks[0].startTime).toBe('2026-06-25T10:00:00.000Z');
   });
 });

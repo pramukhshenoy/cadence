@@ -294,6 +294,53 @@ describe('POST /api/chat success', () => {
     await postChat({ conversationId: 'conv1', message: 'Hello' });
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
+
+  it('includes active goals with progress in the system prompt', async () => {
+    (prisma.goal.findMany as jest.Mock).mockResolvedValue([{
+      id: 'goal1',
+      title: 'Learn Spanish',
+      priority: 'HIGH',
+      status: 'ACTIVE',
+      targetDate: new Date('2026-12-31'),
+      tasks: [
+        { status: 'DONE', updatedAt: new Date() },
+        { status: 'DONE', updatedAt: new Date() },
+        { status: 'TODO', updatedAt: new Date() },
+      ],
+    }]);
+
+    await postChat({ conversationId: 'conv1', message: 'What are my goals?' });
+
+    const call = getMockCreate().mock.calls[0][0] as { system: string };
+    expect(call.system).toContain('Learn Spanish');
+    expect(call.system).toContain('[HIGH]');
+    expect(call.system).toContain('2/3 tasks done');
+  });
+
+  it('writes SSE error event when Anthropic stream throws', async () => {
+    getMockCreate().mockRejectedValue(new Error('Network failure'));
+    const res = await postChat({ conversationId: 'conv1', message: 'Hello' });
+    expect(res.status).toBe(200); // headers already flushed
+    expect(res.body as string).toContain('"type":"error"');
+    expect(res.body as string).toContain('Streaming failed');
+  });
+
+  it('continues and sends done event when DB persist fails after successful stream', async () => {
+    (prisma.$transaction as jest.Mock).mockRejectedValue(new Error('DB write failed'));
+    const res = await postChat({ conversationId: 'conv1', message: 'Hello' });
+    expect(res.status).toBe(200);
+    const events = parseSSE(res.body as string);
+    expect(events[events.length - 1]).toEqual({ type: 'done' });
+  });
+
+  it('returns 500 via errorHandler when pre-stream DB operation throws', async () => {
+    (prisma.chatMessage.findMany as jest.Mock).mockRejectedValue(new Error('DB exploded'));
+    const res = await request(app)
+      .post('/api/chat')
+      .set(HEADERS)
+      .send({ conversationId: 'conv1', message: 'Hello' });
+    expect(res.status).toBe(500);
+  });
 });
 
 // ─── OpenAI streaming ────────────────────────────────────────────────────────
@@ -317,6 +364,23 @@ describe('POST /api/chat OpenAI', () => {
     await postChat({ conversationId: 'conv1', message: 'Hi', model: 'gpt-4o' });
     expect(getMockCreate()).not.toHaveBeenCalled();
     expect(getOpenAIMockCreate()).toHaveBeenCalled();
+  });
+
+  it('maps prior history into OpenAI message format including assistant turns', async () => {
+    // findMany returns results in createdAt DESC order (most recent first).
+    // The route reverses them so they're chronological before sending to the model.
+    (prisma.chatMessage.findMany as jest.Mock).mockResolvedValue([
+      { id: 'a1', conversationId: 'conv1', role: 'ASSISTANT', content: 'prev answer', createdAt: new Date() },
+      { id: 'u1', conversationId: 'conv1', role: 'USER', content: 'prev question', createdAt: new Date() },
+    ]);
+    await postChat({ conversationId: 'conv1', message: 'Hi', model: 'gpt-4o' });
+    const call = getOpenAIMockCreate().mock.calls[0][0] as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    const roles = call.messages.map((m) => m.role);
+    expect(roles).toContain('system');
+    expect(roles).toContain('assistant');
+    expect(roles).toContain('user');
   });
 });
 
