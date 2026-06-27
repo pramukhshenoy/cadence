@@ -197,3 +197,33 @@ Git push follows each commit if a remote is configured.
 - [ ] Health Connect unavailable: hide sleep card gracefully
 - [ ] API error toasts
 - [ ] `git commit`: `phase-6d: error handling and offline states`
+
+---
+
+## Phase 7 — Goals ✅
+
+### 7a — Goals Backend ✅
+- [x] Prisma: `Goal` model, `GoalStatus` enum, `Task.goalId` FK + migration
+- [x] REST API: CRUD at `/api/goals` with `progressPercent` and `velocityCount` computed fields
+- [x] Task route: `?goalId=` filter on GET, `goalId` field on PATCH
+- [x] Chat system prompt: `## Active Goals` section added to `buildSystemPrompt()`
+- [x] Jest tests: 28 tests covering all routes + edge cases
+- [x] `git commit`: `phase-7a: goals REST API and chat context`
+
+### 7b — Goals Screen (Mobile) ✅
+- [x] Types: `Goal`, `GoalStatus`, `CreateGoalPayload`, `UpdateGoalPayload` in `types/goal.ts`
+- [x] Hooks: `useGoals`, `useCreateGoal`, `useUpdateGoal`, `useDeleteGoal` in `lib/goals.ts`
+- [x] `goal-add.tsx`: expandable form with priority chips and date presets (1/3/6/12 months)
+- [x] `goal-item.tsx`: card with progress bar, swipe to complete/delete, long-press to edit
+- [x] `goals.tsx`: list screen with Active/Completed/Abandoned sections, SafeAreaView header
+- [x] `goals/[id].tsx`: detail screen with scoped task list, progress bar, back navigation
+- [x] `app-tabs.tsx`: Goals tab added between Habits and Chat with GoalsIcon
+- [x] `git commit`: `phase-7b: goals screen, components, and navigation tab`
+
+### 7c — Task-Goal Linking (Mobile) ✅
+- [x] `UpdateTaskPayload` updated with `goalId?: string | null`
+- [x] Task mutations (`create/update/delete`) now invalidate goals cache
+- [x] `task-add.tsx`: goal chip selector in expanded form (hidden when `goalId` prop provided)
+- [x] `task-item.tsx`: `◎ Goal name` badge in view mode; goal chip selector in edit mode
+- [x] `tasks.tsx`: `handleAdd` passes `goalId` to `createTask.mutate`
+- [x] `git commit`: `phase-7c: task-goal linking in create and edit flows`
