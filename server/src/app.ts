@@ -9,6 +9,7 @@ import settingsRouter from './routes/settings';
 import calendarRouter from './routes/calendar';
 import focusBlocksRouter from './routes/focus-blocks';
 import sleepRouter from './routes/sleep';
+import goalsRouter from './routes/goals';
 
 const app = express();
 app.use(express.json());
@@ -26,6 +27,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/calendar', calendarRouter);
 app.use('/api/focus-blocks', focusBlocksRouter);
 app.use('/api/sleep', sleepRouter);
+app.use('/api/goals', goalsRouter);
 app.use(errorHandler);
 
 export default app;

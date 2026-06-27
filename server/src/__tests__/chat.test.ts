@@ -36,6 +36,9 @@ jest.mock('../lib/prisma', () => ({
     habit: {
       findMany: jest.fn(),
     },
+    goal: {
+      findMany: jest.fn(),
+    },
     settings: {
       findUnique: jest.fn(),
       upsert: jest.fn(),
@@ -126,6 +129,7 @@ beforeEach(() => {
   (prisma.$transaction as jest.Mock).mockImplementation((ops: unknown[]) => Promise.all(ops));
   (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
   (prisma.habit.findMany as jest.Mock).mockResolvedValue([]);
+  (prisma.goal.findMany as jest.Mock).mockResolvedValue([]);
   (settingsLib.getSettings as jest.Mock).mockResolvedValue(mockSettings);
   getMockCreate().mockResolvedValue(makeStream(['Hi', ' there']));
 });

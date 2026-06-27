@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
-import { TaskStatus } from '@prisma/client';
+import { TaskStatus, GoalStatus } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { getSettings } from '../lib/settings';
 import { CLAUDE_MODELS, OPENAI_MODELS, isValidModelId } from '../lib/models';
@@ -43,7 +43,7 @@ async function buildSystemPrompt(tz: string): Promise<string> {
     day: '2-digit',
   });
 
-  const [tasks, habits] = await Promise.all([
+  const [tasks, habits, goals] = await Promise.all([
     prisma.task.findMany({
       where: { status: { not: TaskStatus.DONE } },
       orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
@@ -52,6 +52,11 @@ async function buildSystemPrompt(tz: string): Promise<string> {
       include: {
         completions: { where: { localDate: today } },
       },
+    }),
+    prisma.goal.findMany({
+      where: { status: GoalStatus.ACTIVE },
+      include: { tasks: { select: { status: true, updatedAt: true } } },
+      orderBy: [{ priority: 'desc' }, { targetDate: 'asc' }],
     }),
   ]);
 
@@ -76,6 +81,24 @@ async function buildSystemPrompt(tz: string): Promise<string> {
           })
           .join('\n');
 
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const goalSection =
+    goals.length === 0
+      ? 'No active goals.'
+      : goals
+          .map((g) => {
+            const total = g.tasks.length;
+            const done = g.tasks.filter((t) => t.status === TaskStatus.DONE).length;
+            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+            const velocity = g.tasks.filter(
+              (t) => t.status === TaskStatus.DONE && t.updatedAt >= sevenDaysAgo,
+            ).length;
+            const due = g.targetDate ? `, due ${dateFormatter.format(g.targetDate)}` : '';
+            const velocityStr = velocity > 0 ? `, ${velocity} task${velocity > 1 ? 's' : ''} completed this week` : '';
+            return `- "${g.title}" [${g.priority}] — ${done}/${total} tasks done (${pct}%)${velocityStr}${due}`;
+          })
+          .join('\n');
+
   return `You are a personal assistant for Cadence, a personal productivity app. Help the user manage their tasks, habits, and schedule.
 
 Today's date: ${today}
@@ -86,7 +109,10 @@ ${taskSection}
 ## Today's Habits
 ${habitSection}
 
-Keep responses concise and actionable. When referencing tasks or habits, use the information above.`;
+## Active Goals
+${goalSection}
+
+Keep responses concise and actionable. When referencing tasks, habits, or goals, use the information above.`;
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

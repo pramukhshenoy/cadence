@@ -7,6 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Goal {
+  id            String     @id @default(cuid())
+  title         String
+  description   String?
+  priority      Priority
+  status        GoalStatus @default(ACTIVE)
+  targetDate    DateTime?
+  linkedHabitId String?
+  tasks         Task[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
 model Task {
   id          String     @id @default(cuid())
   title       String
@@ -14,6 +27,8 @@ model Task {
   priority    Priority
   dueDate     DateTime?
   status      TaskStatus @default(TODO)
+  goalId      String?
+  goal        Goal?      @relation(fields: [goalId], references: [id])
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -118,4 +133,10 @@ enum SleepQuality {
 enum Role {
   USER
   ASSISTANT
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
 }

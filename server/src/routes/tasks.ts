@@ -6,9 +6,9 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, priority } = req.query;
+    const { status, priority, goalId } = req.query;
 
-    const where: { status?: TaskStatus; priority?: Priority } = {};
+    const where: { status?: TaskStatus; priority?: Priority; goalId?: string | null } = {};
     if (status !== undefined) {
       if (!Object.values(TaskStatus).includes(status as TaskStatus)) {
         res.status(400).json({ error: `Invalid status: must be one of ${Object.values(TaskStatus).join(', ')}` });
@@ -22,6 +22,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         return;
       }
       where.priority = priority as Priority;
+    }
+    if (goalId !== undefined) {
+      where.goalId = goalId === 'null' ? null : (goalId as string);
     }
 
     const tasks = await prisma.task.findMany({
@@ -84,12 +87,13 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { title, description, priority, dueDate, status } = (req.body ?? {}) as {
+    const { title, description, priority, dueDate, status, goalId } = (req.body ?? {}) as {
       title: unknown;
       description: unknown;
       priority: unknown;
       dueDate: unknown;
       status: unknown;
+      goalId: unknown;
     };
 
     if (title !== undefined && (typeof title !== 'string' || !title.trim())) {
@@ -125,6 +129,21 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       }
     }
     if (status !== undefined) data.status = status as TaskStatus;
+    if (goalId !== undefined) {
+      if (goalId === null) {
+        data.goal = { disconnect: true };
+      } else if (typeof goalId === 'string') {
+        const goalExists = await prisma.goal.findUnique({ where: { id: goalId }, select: { id: true } });
+        if (!goalExists) {
+          res.status(400).json({ error: 'Goal not found' });
+          return;
+        }
+        data.goal = { connect: { id: goalId } };
+      } else {
+        res.status(400).json({ error: 'goalId must be a string or null' });
+        return;
+      }
+    }
 
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'No valid fields provided for update' });

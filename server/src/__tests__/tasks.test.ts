@@ -12,6 +12,9 @@ jest.mock('../lib/prisma', () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    goal: {
+      findUnique: jest.fn(),
+    },
   },
 }));
 
@@ -355,5 +358,73 @@ describe('DELETE /api/tasks/:id', () => {
   it('returns 401 without auth', async () => {
     const res = await request(app).delete('/api/tasks/cuid1');
     expect(res.status).toBe(401);
+  });
+});
+
+// ─── goalId support ──────────────────────────────────────────────────────────
+
+describe('GET /api/tasks — goalId filter', () => {
+  it('passes goalId filter to prisma', async () => {
+    (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
+    await request(app).get('/api/tasks?goalId=goal1').set('Authorization', AUTH);
+    expect(prisma.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { goalId: 'goal1' } }),
+    );
+  });
+
+  it('converts goalId=null string to null filter', async () => {
+    (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
+    await request(app).get('/api/tasks?goalId=null').set('Authorization', AUTH);
+    expect(prisma.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { goalId: null } }),
+    );
+  });
+});
+
+describe('PATCH /api/tasks/:id — goalId field', () => {
+  it('connects task to an existing goal', async () => {
+    (prisma.goal.findUnique as jest.Mock).mockResolvedValue({ id: 'goal1' });
+    (prisma.task.update as jest.Mock).mockResolvedValue({ ...mockTask, goalId: 'goal1' });
+    const res = await request(app)
+      .patch('/api/tasks/cuid1')
+      .set('Authorization', AUTH)
+      .send({ goalId: 'goal1' });
+    expect(res.status).toBe(200);
+    expect(prisma.goal.findUnique).toHaveBeenCalledWith({ where: { id: 'goal1' }, select: { id: true } });
+    expect(prisma.task.update).toHaveBeenCalledWith({
+      where: { id: 'cuid1' },
+      data: { goal: { connect: { id: 'goal1' } } },
+    });
+  });
+
+  it('returns 400 when goal does not exist', async () => {
+    (prisma.goal.findUnique as jest.Mock).mockResolvedValue(null);
+    const res = await request(app)
+      .patch('/api/tasks/cuid1')
+      .set('Authorization', AUTH)
+      .send({ goalId: 'missing-goal' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Goal not found/);
+  });
+
+  it('disconnects goal when goalId is null', async () => {
+    (prisma.task.update as jest.Mock).mockResolvedValue({ ...mockTask, goalId: null });
+    const res = await request(app)
+      .patch('/api/tasks/cuid1')
+      .set('Authorization', AUTH)
+      .send({ goalId: null });
+    expect(res.status).toBe(200);
+    expect(prisma.task.update).toHaveBeenCalledWith({
+      where: { id: 'cuid1' },
+      data: { goal: { disconnect: true } },
+    });
+  });
+
+  it('returns 400 for non-string non-null goalId', async () => {
+    const res = await request(app)
+      .patch('/api/tasks/cuid1')
+      .set('Authorization', AUTH)
+      .send({ goalId: 42 });
+    expect(res.status).toBe(400);
   });
 });
