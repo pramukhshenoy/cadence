@@ -8,6 +8,7 @@ export interface Task {
   priority: Priority;
   dueDate: string | null;
   status: TaskStatus;
+  goalId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +18,7 @@ export interface CreateTaskPayload {
   priority: Priority;
   description?: string;
   dueDate?: string | null;
+  goalId?: string | null;
 }
 
 export interface UpdateTaskPayload {

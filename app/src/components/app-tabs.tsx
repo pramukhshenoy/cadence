@@ -3,7 +3,7 @@ import { Text, View, StyleSheet, ColorValue, useColorScheme } from 'react-native
 
 import { Colors } from '@/constants/theme';
 
-type TabName = 'home' | 'tasks' | 'habits' | 'chat' | 'settings';
+type TabName = 'home' | 'tasks' | 'habits' | 'goals' | 'chat' | 'settings';
 
 function TabIcon({ name, color, size }: { name: TabName; color: ColorValue; size: number }) {
   const s = Math.round(size * 0.9);
@@ -12,6 +12,7 @@ function TabIcon({ name, color, size }: { name: TabName; color: ColorValue; size
       {name === 'home' && <HomeIcon color={color} size={s} />}
       {name === 'tasks' && <TasksIcon color={color} size={s} />}
       {name === 'habits' && <HabitsIcon color={color} size={s} />}
+      {name === 'goals' && <GoalsIcon color={color} size={s} />}
       {name === 'chat' && <ChatIcon color={color} size={s} />}
       {name === 'settings' && <SettingsIcon color={color} size={s} />}
     </View>
@@ -42,6 +43,20 @@ function HabitsIcon({ color, size }: { color: ColorValue; size: number }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', width: size, height: size }}>
       <Text style={{ fontSize: size * 0.85, color, lineHeight: size, includeFontPadding: false }}>◉</Text>
+    </View>
+  );
+}
+
+function GoalsIcon({ color, size }: { color: ColorValue; size: number }) {
+  const r = size * 0.38;
+  const r2 = size * 0.22;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ width: r * 2, height: r * 2, borderRadius: r, borderWidth: 2, borderColor: color, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: r2 * 2, height: r2 * 2, borderRadius: r2, borderWidth: 2, borderColor: color, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: color }} />
+        </View>
+      </View>
     </View>
   );
 }
@@ -85,11 +100,12 @@ const TABS: { name: string; title: string; icon: TabName }[] = [
   { name: 'index', title: 'Dashboard', icon: 'home' },
   { name: 'tasks', title: 'Tasks', icon: 'tasks' },
   { name: 'habits', title: 'Habits', icon: 'habits' },
+  { name: 'goals', title: 'Goals', icon: 'goals' },
   { name: 'chat', title: 'Chat', icon: 'chat' },
   { name: 'settings', title: 'Settings', icon: 'settings' },
 ];
 
-const HIDDEN_SCREENS = ['calendar-setup'];
+const HIDDEN_SCREENS = ['calendar-setup', 'goals/[id]'];
 
 export default function AppTabs() {
   const scheme = useColorScheme() ?? 'light';
